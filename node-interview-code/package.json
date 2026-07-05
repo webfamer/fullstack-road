@@ -1,0 +1,19 @@
+{
+  "name": "node-interview-code",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Runnable Node.js interview demos",
+  "type": "commonjs",
+  "scripts": {
+    "prepare:sample": "node scripts/generate-sample.js",
+    "server:static": "node 01-static-file-server/server.js",
+    "server:download": "node 02-download-compare/server.js",
+    "gzip": "node 03-pipeline-gzip/gzip-file.js",
+    "bff": "node 04-bff-timeout/server.js",
+    "block": "node 05-event-loop-blocking/blocking-demo.js",
+    "worker": "node 05-event-loop-blocking/worker-demo.js",
+    "interop:cjs": "node 06-cjs-esm-interop/run-cjs.js",
+    "interop:esm": "node 06-cjs-esm-interop/run-esm.mjs",
+    "graceful": "node 07-graceful-shutdown/server.js"
+  }
+}

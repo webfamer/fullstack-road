@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<!--
+  Interview-prep template. The prep-interview skill replaces these placeholders:
+    面试准备｜高级 Agent 开发工程师｜本智激活            -> page title string
+    __META__             -> JSON: { role, candidate, language, generated, coverage:{jd:[],cv:[]} }
+    __PROMPT_TEMPLATE__  -> JSON string of the copy prompt; contains {{QUESTION}} and {{FOLLOWUPS}}
+    __DATA__             -> JSON array: [ { category, questions:[ {q, level, source, followups:[]} ] } ]
+    __UI__               -> JSON labels: { progress, of, processed, copy_hint, copied, undo,
+                                           filter_category, filter_level, all, hide_processed,
+                                           why, followups, reset, foundational, core, advanced,
+                                           filter_jd, filter_cv, footer }
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>面试准备｜高级 Agent 开发工程师｜本智激活</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --panel:#ffffff; --panel2:#f0f2f5; --line:#e3e6ec; --line2:#eef0f4;
+    --txt:#1f2430; --muted:#6b7280; --soft:#8a91a0; --accent:#3b6cf6; --accent-weak:#e8efff;
+    --good:#16a34a; --good-weak:#e7f6ec;
+    --found:#16a34a; --core:#c2860a; --adv:#dc2626;
+    --tree:#d4d9e2;
+    --shadow:0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Inter","Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--txt);
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  }
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:920px;margin:0 auto;padding:36px 22px 96px}
+
+  header h1{font-size:24px;line-height:1.3;margin:0 0 8px;letter-spacing:-.01em;font-weight:700}
+  .sub{color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+  .sub b{color:var(--txt);font-weight:600}
+  .sub .dot{width:3px;height:3px;border-radius:50%;background:var(--soft);display:inline-block}
+
+  .coverage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:22px 0 6px;box-shadow:var(--shadow)}
+  .cov-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:640px){.cov-cols{grid-template-columns:1fr}}
+  .coverage h3{margin:0 0 10px;font-size:11px;color:var(--soft);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px 11px;font-size:12px;color:var(--muted)}
+
+  .bar{position:sticky;top:0;z-index:5;background:linear-gradient(var(--bg),var(--bg) 78%,rgba(247,248,250,0));padding:14px 0 14px;margin-bottom:2px}
+  .progwrap{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+  .progtrack{flex:1;height:7px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .progfill{height:100%;width:0;background:var(--good);transition:width .3s ease}
+  .progtxt{font-size:13px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  select,button{font:inherit;font-size:13px;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:7px 11px;transition:border-color .15s,background .15s}
+  select:hover,button:hover{border-color:var(--accent)}
+  select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M3 4.5L6 7.5L9 4.5' stroke='%236b7280' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");background-repeat:no-repeat;background-position:right 9px center;padding-right:28px}
+  button{cursor:pointer}
+  label.toggle{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:13px;cursor:pointer;user-select:none}
+  label.toggle input{accent-color:var(--accent)}
+
+  /* section heading (category) */
+  .cat{display:flex;align-items:baseline;gap:10px;margin:30px 0 4px;padding-bottom:2px}
+  .cat .cat-name{font-size:13px;color:var(--soft);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+  .cat .cat-count{font-size:12px;color:var(--soft);font-variant-numeric:tabular-nums}
+
+  /* tree */
+  .tree{position:relative;margin-left:6px}
+  .node{position:relative;padding-left:26px}
+  .node::before{content:"";position:absolute;left:0;top:0;bottom:0;width:1.5px;background:var(--tree)}
+  .node:last-child::before{bottom:auto;height:22px}
+  .node::after{content:"";position:absolute;left:0;top:21px;width:18px;height:1.5px;background:var(--tree)}
+
+  .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin:9px 0;cursor:pointer;box-shadow:var(--shadow);transition:border-color .15s,box-shadow .15s,opacity .15s,transform .05s}
+  .card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(59,108,246,.10)}
+  .card:active{transform:translateY(.5px)}
+
+  .q-row{display:flex;gap:9px;align-items:flex-start}
+  .node-dot{flex:none;width:9px;height:9px;border-radius:50%;margin-top:6px;background:var(--accent);box-shadow:0 0 0 3px var(--accent-weak)}
+  .q-text{font-weight:600;flex:1;letter-spacing:-.005em}
+  .lvl{flex:none;font-size:10.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-top:1px}
+  .lvl.Foundational{color:var(--found);border-color:#bfe6c9;background:var(--good-weak)}
+  .lvl.Core{color:var(--core);border-color:#f0dcae;background:#fbf3e0}
+  .lvl.Advanced{color:var(--adv);border-color:#f3c2c2;background:#fdeaea}
+
+  .src{color:var(--muted);font-size:12.5px;margin:7px 0 0;padding-left:18px}
+  .src b{color:var(--txt);font-weight:600}
+
+  /* follow-up sub-tree */
+  .fu{margin:9px 0 1px;padding-left:18px}
+  .fu-label{font-size:11px;color:var(--soft);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:3px}
+  .fu-tree{position:relative;margin-left:3px}
+  .fu-item{position:relative;padding:3px 0 3px 20px;font-size:13.5px;color:var(--muted);line-height:1.5}
+  .fu-item::before{content:"";position:absolute;left:0;top:0;bottom:0;width:1.5px;background:var(--line)}
+  .fu-item:last-child::before{bottom:auto;height:15px}
+  .fu-item::after{content:"";position:absolute;left:0;top:14px;width:13px;height:1.5px;background:var(--line)}
+
+  .hint{font-size:12px;color:var(--accent);margin-top:9px;padding-left:18px;opacity:0;transition:opacity .15s}
+  .card:hover .hint{opacity:.9}
+
+  .card.done{opacity:.62;border-style:dashed;background:var(--good-weak)}
+  .card.done .node-dot{background:var(--good);box-shadow:0 0 0 3px var(--good-weak)}
+  .card.done .q-text::before{content:"✓ ";color:var(--good);font-weight:700}
+  .card.done .hint{opacity:0}
+  .undo{margin-left:auto;flex:none;font-size:12px;background:transparent;border:none;color:var(--muted);text-decoration:underline;padding:0;cursor:pointer;display:none}
+  .card.done .undo{display:inline}
+
+  .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--txt);color:#fff;font-weight:600;font-size:13px;padding:10px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:.25s;box-shadow:0 6px 20px rgba(16,24,40,.18)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .hidden{display:none!important}
+  footer{margin-top:38px;color:var(--soft);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="title"></h1>
+    <div class="sub" id="meta"></div>
+  </header>
+
+  <section class="coverage" id="coverage">
+    <div class="cov-cols">
+      <div><h3 id="lbl-jd">JD requirements</h3><div class="chips" id="cov-jd"></div></div>
+      <div><h3 id="lbl-cv">Resume areas</h3><div class="chips" id="cov-cv"></div></div>
+    </div>
+  </section>
+
+  <div class="bar">
+    <div class="progwrap">
+      <div class="progtrack"><div class="progfill" id="progfill"></div></div>
+      <div class="progtxt" id="progtxt"></div>
+    </div>
+    <div class="controls">
+      <select id="f-cat"></select>
+      <select id="f-lvl"></select>
+      <label class="toggle"><input type="checkbox" id="f-hide"> <span id="lbl-hide"></span></label>
+      <button id="reset"></button>
+    </div>
+  </div>
+
+  <div id="list"></div>
+  <footer id="foot"></footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const META = {"role":"高级 Agent 开发工程师（React / Electron / Agent 集成）","candidate":"项思哲","language":"中文","generated":"2026-06-19","coverage":{"jd":["React、React Router、Redux/Zustand","JavaScript、TypeScript、DOM/BOM 与事件机制","Electron 主进程、渲染进程、IPC 与打包","MCP、Skills 与 Agent 能力集成","RAG、向量检索、文档切片与检索增强展示","WebSocket 流式响应、心跳、重连与状态同步","Node.js 中间层接口与调用链稳定性","Webpack/Vite、Git、测试与代码评审","Agent 产品交互、任务状态与数据可视化","模块设计、联调、故障定位与团队交付"],"cv":["BI 智能问数 Agent","LangGraph / LangChain / SQL Agent","MySQL / Qdrant / Elasticsearch 元数据 RAG","FastAPI / SSE 流式交互","BI 报表分析平台","React / TypeScript / Monorepo / Storybook / VTable","电力设备监测云平台","NestJS / TCP / JWT / RBAC / SQL 优化","智慧靶场驾驶舱","WebSocket / ECharts / Unity WebGL / Node.js 推流","Docker / Nginx 部署与线上排障","前端组长与跨团队交付"]}};
+const DATA = [{"category":"A｜JD：React、TypeScript 与前端架构","questions":[{"q":"如果让你从零搭建一个 Agent Web 客户端，你会如何设计 React 项目架构、路由、状态和模块边界？","level":"Advanced","source":"JD：要求精通 React 生态并能独立搭建项目架构","followups":["哪些状态放组件、Zustand/Redux、URL 或服务端缓存？","对话、任务、工具调用和知识库模块如何解耦？","如何支持后续接入 Electron 而不重写核心业务？"]},{"q":"React 的渲染、协调与提交阶段分别做什么？Agent 流式输出时如何避免频繁渲染造成卡顿？","level":"Advanced","source":"JD：React 核心能力与 Agent 流式数据展示","followups":["React.memo、useMemo、useCallback 的边界是什么？","token 高频更新时如何批处理或降低刷新频率？","如何用 Profiler 证明优化有效？"]},{"q":"请解释 React Hooks 的闭包问题，并举例说明长连接事件回调如何拿到最新状态。","level":"Core","source":"JD：React Hooks、JavaScript 闭包与实时通信场景","followups":["useEffect 依赖遗漏会造成什么问题？","useRef、函数式更新和 useEffectEvent 思路分别怎么用？","如何避免重复注册 WebSocket 监听器？"]},{"q":"你会如何用 TypeScript 设计 Agent 事件协议，使文本、工具调用、状态变化、错误和最终结果都能类型安全地处理？","level":"Advanced","source":"JD：TypeScript 与 Agent 数据交互","followups":["如何使用可辨识联合类型？","服务端新增事件类型时怎样保证前端及时发现？","运行时数据校验和静态类型分别解决什么问题？"]},{"q":"浏览器事件循环、微任务和渲染时机是什么关系？它们会怎样影响流式消息和 UI 响应？","level":"Core","source":"JD：要求理解 JavaScript 事件机制、DOM/BOM","followups":["大量 Promise 回调为什么可能饿死渲染？","requestAnimationFrame 适合处理什么？","如何定位主线程长任务？"]}]},{"category":"A｜JD：Electron 桌面端","questions":[{"q":"请介绍 Electron 的主进程、渲染进程和 preload，它们之间应该如何划分职责？","level":"Core","source":"JD：要求了解 Electron 基本原理与进程通信","followups":["contextIsolation 和 nodeIntegration 为什么重要？","哪些能力只能放在主进程？","BrowserWindow 的生命周期如何管理？"]},{"q":"如何设计安全、可维护的 Electron IPC 接口，让 React 页面调用文件、系统和 Agent 本地能力？","level":"Advanced","source":"JD：Electron IPC 与 Agent 桌面端能力集成","followups":["ipcMain.handle 与 send/on 如何选择？","如何限制渲染进程可调用的能力和参数？","IPC 超时、取消和错误如何透传？"]},{"q":"Electron 应用从开发到打包发布会遇到哪些常见问题？你会如何设计构建与升级流程？","level":"Core","source":"JD：要求完成 Electron 基础打包与问题定位","followups":["原生依赖、asar、资源路径和代码签名有哪些坑？","自动更新如何保证版本兼容和失败回滚？","不同操作系统如何管理配置和安装包？"]},{"q":"Electron 应用出现内存上涨、窗口白屏或启动慢时，你会怎样定位？","level":"Advanced","source":"JD：Electron 常见问题定位与跨端优化加分项","followups":["如何区分主进程和渲染进程问题？","窗口销毁后哪些监听器和资源需要清理？","如何采集桌面端崩溃与性能数据？"]}]},{"category":"A｜JD：Agent、MCP、Skills 与 RAG","questions":[{"q":"你如何理解 Agent、Workflow 和普通大模型对话的区别？前端需要感知哪些运行状态？","level":"Core","source":"JD：Agent 产品前端与任务状态展示","followups":["规划、工具调用、观察和最终回答如何展示？","什么时候适合 Workflow，什么时候需要自主 Agent？","前端如何处理人工确认和任务取消？"]},{"q":"MCP 解决了什么问题？客户端、Server、Tool、Resource 和 Prompt 分别是什么角色？","level":"Core","source":"JD：要求熟悉 MCP 并有实际使用经验","followups":["MCP 与普通 REST API 或 Function Calling 有什么差异？","stdio 与 HTTP/SSE 传输如何选择？","如何做能力发现和参数校验？"]},{"q":"如果在桌面 Agent 中接入多个 MCP Server，你会如何设计权限、生命周期、错误隔离和 UI 展示？","level":"Advanced","source":"JD：MCP 集成、Electron 桌面端与稳定调用链","followups":["工具调用前如何向用户解释风险并确认？","单个 MCP Server 崩溃是否会影响整条任务？","如何记录可审计的调用日志？"]},{"q":"你如何定义 Agent Skills？Skill 与 Tool、Prompt 模板和 Workflow 的边界是什么？","level":"Advanced","source":"JD：要求熟悉 Skills 概念与能力集成","followups":["Skill 应包含哪些元数据、说明和资源？","如何选择、加载并限制 Skill 的上下文？","怎样测试一个 Skill 是否稳定有效？"]},{"q":"请完整描述一个 RAG 系统从文档导入到回答生成的链路，以及每一阶段的主要失败模式。","level":"Core","source":"JD：要求具备 RAG、向量数据库和文档切片经验","followups":["文档解析、切片、Embedding、召回和 Rerank 各做什么？","如何处理表格、代码和标题层级？","如何判断问题是没召回还是模型没用好上下文？"]},{"q":"RAG 的检索结果应该如何在前端展示，才能兼顾可信度、可解释性和使用效率？","level":"Advanced","source":"JD：RAG 检索增强展示与 Agent 数据可视化","followups":["引用片段如何定位回原文？","低置信度或互相矛盾的资料如何提示？","如何展示检索、重排和生成各阶段耗时？"]}]},{"category":"A｜JD：WebSocket、Node.js 与工程交付","questions":[{"q":"请设计一套 WebSocket Agent 流式协议，支持增量文本、工具调用、任务状态、错误、取消和最终完成。","level":"Advanced","source":"JD：要求用 WebSocket 实现 Agent 流式响应与状态推送","followups":["消息如何编号以处理乱序和重复？","刷新页面后如何恢复任务？","如何兼容协议升级？"]},{"q":"WebSocket 的断线重连、心跳和连接保活应该如何实现？","level":"Core","source":"JD：明确要求处理断线重连与心跳","followups":["如何区分网络中断、服务端关闭和浏览器休眠？","重连为什么需要指数退避和随机抖动？","重复连接与重复订阅如何避免？"]},{"q":"前端与 Node.js 中间层之间如何设计接口，才能保障长时间 Agent 调用链稳定？","level":"Advanced","source":"JD：Node.js 中间层接口设计与 Agent 链路稳定性","followups":["超时、取消、重试和幂等如何实现？","如何做背压和并发任务限制？","调用链日志中必须包含哪些关联标识？"]},{"q":"你会如何测试一个包含 React、WebSocket、Node.js 和外部 Agent 服务的功能模块？","level":"Core","source":"JD：独立开发、自测、联调与工程质量","followups":["单元、组件、契约和端到端测试分别覆盖什么？","如何模拟流式事件、断线和超时？","哪些故障场景应该进入回归测试？"]},{"q":"作为高级工程师，你如何组织代码评审、Git 分支和前端工程规范，同时避免流程拖慢交付？","level":"Core","source":"JD：Git、代码评审与工程规范落地","followups":["哪些问题必须在 CI 阶段阻断？","大型功能如何拆成可评审的小提交？","你如何处理团队对技术方案的分歧？"]}]},{"category":"B｜简历：BI 智能问数 Agent","questions":[{"q":"请从用户输入问题开始，完整讲解 BI 智能问数 Agent 到图表结果展示的执行链路，并说明你的个人贡献。","level":"Core","source":"CV：BI 智能问数 Agent 全栈开发","followups":["关键词扩展、字段指标理解和 SQL 生成如何分工？","哪些节点由 LangChain 实现，哪些由 LangGraph 编排？","最难调试的问题是什么？"]},{"q":"你为什么选择 LangGraph 构建 SQL 过程状态图？checkpoint 如何支持暂停、恢复和失败重试？","level":"Advanced","source":"CV：LangGraph 多节点编排与 checkpoint","followups":["状态中保存哪些数据，哪些不应该保存？","节点重复执行如何避免副作用？","如果加入人工审批 SQL，应如何修改流程？"]},{"q":"元数据知识库为什么同时使用 MySQL、Qdrant 和 Elasticsearch？三者在检索链路中分别承担什么职责？","level":"Advanced","source":"CV：元数据 RAG 与混合存储检索","followups":["字段别名、指标口径和字段取值如何切片？","关键词与向量召回如何融合和排序？","元数据变更后如何保证索引一致？"]},{"q":"你使用 SSE 实现流式问数，如果岗位要求改成 WebSocket，你会如何迁移，哪些设计可以复用？","level":"Advanced","source":"CV × JD：FastAPI/SSE 经验迁移到 WebSocket Agent","followups":["SSE 和 WebSocket 在双向通信、重连和基础设施上的差异是什么？","任务取消和多任务订阅如何实现？","消息协议如何保持前后兼容？"]},{"q":"SQL Agent 如何防止生成错误 SQL、越权查询或高成本查询？你如何评估问数准确率？","level":"Advanced","source":"CV：LLM 生成 SQL 与业务数据访问","followups":["如何限制库表字段和数据权限？","执行前做哪些语法、语义与成本检查？","离线评测集和线上反馈指标如何设计？","错误答案如何追踪到具体节点？"]}]},{"category":"B｜简历：BI 报表与前端工程化","questions":[{"q":"BI 报表分析平台的前端架构如何支持字段配置、拖拽生成报表、仪表盘和导出分享？","level":"Core","source":"CV：BI 自定义报表平台核心链路","followups":["报表配置协议如何设计与版本化？","多个图表之间如何做联动和状态隔离？","导出结果如何与页面保持一致？"]},{"q":"你基于 Storybook 和管道模式建设图表组件库，管道模式解决了什么变化问题？","level":"Advanced","source":"CV：Storybook 图表组件库与管道模式","followups":["数据转换、配置合并和渲染如何分层？","如何发布 npm 包并管理破坏性变更？","组件库如何进行视觉回归和交互测试？"]},{"q":"请解释你在 VTable 上使用适配器模式实现复杂表格能力的方案。","level":"Advanced","source":"CV：VTable 适配器、字段渲染、冻结列与下钻","followups":["适配器隔离了第三方表格的哪些变化？","字段渲染器如何类型安全地扩展？","大数据量下如何控制重渲染和内存？"]},{"q":"图片 CDN、骨架屏、组件异步加载和多区域部署分别带来了什么收益？你如何用指标验证？","level":"Core","source":"CV：BI 页面加载体验优化","followups":["会重点观察哪些 Core Web Vitals？","骨架屏在哪些情况下反而影响体验？","多区域发布如何处理版本和缓存一致性？"]}]},{"category":"B｜简历：实时系统、全栈能力与岗位匹配","questions":[{"q":"智慧靶场驾驶舱如何处理 WebSocket 高频训练数据？断线、乱序、积压和页面销毁时分别怎么处理？","level":"Advanced","source":"CV：WebSocket 高频数据与长期运行优化","followups":["消息是否有序列号和时间戳？","高频数据如何批量更新可视化？","如何防止监听器和缓存造成内存泄漏？"]},{"q":"RTSP 转 MPEG 推流、人员轨迹和 Unity WebGL 三维画面如何做数据同步？","level":"Advanced","source":"CV：Node.js 推流、实时轨迹与 Unity WebGL","followups":["视频与事件数据使用什么时间基准？","延迟波动时如何校准？","白屏和卡顿如何分层排查？"]},{"q":"电力设备平台中，你如何用 NestJS 接入 TCP 设备并处理粘包、拆包和协议解析？","level":"Advanced","source":"CV：NestJS / TCP 设备接入链路","followups":["400+ 设备连接如何管理？","原始报文和解析结果为什么都要持久化？","背压、异常设备和连接风暴如何处理？"]},{"q":"你将关键接口从十几秒优化到约 2 秒，完整的定位、修改和验证过程是什么？","level":"Advanced","source":"CV：接口与慢 SQL 优化成果","followups":["如何证明瓶颈在 SQL 而不是应用层？","执行计划、索引和返回数据量如何分析？","优化后如何监控性能回退？"]},{"q":"你的简历没有明确的 Electron 项目，面试时你会如何诚实说明经验缺口，同时证明能快速交付？","level":"Core","source":"CV × JD：Electron 是岗位关键能力但简历未展示实际项目","followups":["哪些 React、Node.js 和多端经验可以迁移？","入职前两周你会完成哪些验证项目？","哪些 Electron 安全与打包问题不能靠类比解决？"]},{"q":"你曾担任前端小组长，也做过前端、全栈和 AI 应用。请讲一次你主导技术方案并推动团队交付的经历。","level":"Core","source":"CV：前端组长、跨栈开发与交付责任","followups":["当时有哪些备选方案和关键取舍？","如何拆分任务、评审代码和控制风险？","出现延期或线上问题时你承担了什么责任？"]}]}];
+const UI = {"progress":"已完成 {done} / {total}","of":"/","processed":"已完成","copy_hint":"点击复制 AI 深挖提示词，并标记为已练习","copied":"已复制到剪贴板","undo":"取消标记","filter_category":"全部分类","filter_level":"全部难度","all":"全部","hide_processed":"隐藏已练习","why":"来源","followups":"可能追问","reset":"重置进度","foundational":"基础","core":"核心","advanced":"进阶","filter_jd":"JD 通用知识覆盖","filter_cv":"简历项目与技术覆盖","footer":"点击题目即可复制深挖提示词；练习进度仅保存在当前浏览器。"};
+const PROMPT_TEMPLATE = "请作为高级 Agent 产品、React、Electron 与全栈方向的技术面试教练，深入拆解下面的面试题。\n\n面试题：\n{{QUESTION}}\n\n面试官可能继续追问：\n{{FOLLOWUPS}}\n\n请按以下结构输出：\n1. 最佳回答：给出一份可以直接口述的强回答，先讲结论，再讲原理、架构、数据流、关键实现、权衡和项目证据。\n2. 加分点：指出哪些内容能够体现高级工程师的系统思维、稳定性意识、安全意识、Agent 产品理解和真实实践。\n3. 追问应对：逐条回答给出的追问，并解释面试官想验证什么。\n4. 代码与排障：需要时给出精简的 TypeScript/React/Node.js/Electron 伪代码、协议示例、测试或故障定位步骤。\n5. ASCII 图：当涉及进程、Agent 执行链、MCP、RAG、WebSocket 或状态流转时，用清晰的 ASCII 图辅助说明。\n6. 风险提示：标出容易答错、容易夸大或与我的简历证据不一致的部分。\n7. 最后给出 2 分钟口述版，以及我需要准备的个人项目证据清单。";
+
+const KEY = "interviewprep:" + (META.role||"") + ":" + (META.candidate||"") + ":" + (META.generated||"");
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e){ state = {}; }
+const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} };
+
+// stable id per question
+const qid = (ci, qi) => "c" + ci + "q" + qi;
+
+// ---- header / meta ----
+document.title = document.getElementById("title").textContent = "面试准备｜高级 Agent 开发工程师｜本智激活";
+const meta = document.getElementById("meta");
+const bits = [];
+if (META.role) bits.push(`<span><b>${esc(META.role)}</b></span>`);
+if (META.candidate) bits.push(`<span class="dot"></span><span>${esc(META.candidate)}</span>`);
+if (META.language) bits.push(`<span class="dot"></span><span>${esc(META.language)}</span>`);
+if (META.generated) bits.push(`<span class="dot"></span><span>${esc(META.generated)}</span>`);
+meta.innerHTML = bits.join("");
+
+// ---- coverage ----
+const cov = (META.coverage)||{jd:[],cv:[]};
+document.getElementById("cov-jd").innerHTML = (cov.jd||[]).map(t=>`<span class="chip">${esc(t)}</span>`).join("") || "—";
+document.getElementById("cov-cv").innerHTML = (cov.cv||[]).map(t=>`<span class="chip">${esc(t)}</span>`).join("") || "—";
+
+// ---- UI labels ----
+document.getElementById("lbl-jd").textContent = UI.filter_jd || "JD requirements";
+document.getElementById("lbl-cv").textContent = UI.filter_cv || "Resume areas";
+document.getElementById("lbl-hide").textContent = UI.hide_processed || "Hide processed";
+document.getElementById("reset").textContent = UI.reset || "Reset progress";
+
+// ---- filters ----
+const fCat = document.getElementById("f-cat");
+const fLvl = document.getElementById("f-lvl");
+fCat.innerHTML = `<option value="">${esc(UI.filter_category||"All categories")}</option>` +
+  DATA.map(c=>`<option value="${esc(c.category)}">${esc(c.category)}</option>`).join("");
+const levels = ["Foundational","Core","Advanced"];
+const lvlLabel = l => ({Foundational:UI.foundational, Core:UI.core, Advanced:UI.advanced}[l] || l);
+fLvl.innerHTML = `<option value="">${esc(UI.filter_level||"All levels")}</option>` +
+  levels.map(l=>`<option value="${l}">${esc(lvlLabel(l))}</option>`).join("");
+
+// ---- render ----
+const list = document.getElementById("list");
+function render(){
+  list.innerHTML = "";
+  const cf = fCat.value, lf = fLvl.value, hide = document.getElementById("f-hide").checked;
+  DATA.forEach((cat, ci) => {
+    if (cf && cat.category !== cf) return;
+    const visibleQs = cat.questions.map((q,qi)=>({q,qi})).filter(({q,qi})=>{
+      if (lf && q.level !== lf) return false;
+      if (hide && state[qid(ci,qi)]) return false;
+      return true;
+    });
+    if (!visibleQs.length) return;
+
+    const h = document.createElement("div"); h.className="cat";
+    h.innerHTML = `<span class="cat-name">${esc(cat.category)}</span><span class="cat-count">${visibleQs.length}</span>`;
+    list.appendChild(h);
+
+    const tree = document.createElement("div"); tree.className="tree";
+    visibleQs.forEach(({q,qi})=>{
+      const id = qid(ci,qi);
+      const done = !!state[id];
+      const node = document.createElement("div"); node.className="node";
+      const card = document.createElement("div");
+      card.className = "card" + (done?" done":"");
+      const fu = (q.followups||[]).map(f=>`<div class="fu-item">${esc(f)}</div>`).join("");
+      card.innerHTML =
+        `<div class="q-row">`+
+          `<span class="node-dot"></span>`+
+          `<span class="q-text">${esc(q.q)}</span>`+
+          `<span class="lvl ${q.level}">${esc(lvlLabel(q.level))}</span>`+
+          `<button class="undo" data-id="${id}">${esc(UI.undo||"undo")}</button>`+
+        `</div>`+
+        (q.source?`<div class="src"><b>${esc(UI.why||"Why")}:</b> ${esc(q.source)}</div>`:``)+
+        (fu?`<div class="fu"><div class="fu-label">${esc(UI.followups||"Likely follow-ups")}</div><div class="fu-tree">${fu}</div></div>`:``)+
+        `<div class="hint">${esc(UI.copy_hint||"Click to copy a deep-dive prompt + mark as processed")}</div>`;
+      card.addEventListener("click", (e)=>{
+        if (e.target.classList.contains("undo")){
+          e.stopPropagation(); delete state[id]; save(); render(); updateProgress(); return;
+        }
+        copyPrompt(q);
+        if (!state[id]){ state[id]=true; save(); }
+        render(); updateProgress();
+      });
+      node.appendChild(card);
+      tree.appendChild(node);
+    });
+    list.appendChild(tree);
+  });
+}
+
+function buildPrompt(q){
+  const fu = (q.followups||[]).map((f,i)=>`${i+1}. ${f}`).join("\n");
+  return PROMPT_TEMPLATE.replace(/\{\{QUESTION\}\}/g, q.q).replace(/\{\{FOLLOWUPS\}\}/g, fu || "—");
+}
+function copyPrompt(q){
+  const text = buildPrompt(q);
+  const done = ()=>toast(UI.copied||"Copied to clipboard");
+  if (navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+  } else { fallbackCopy(text, done); }
+}
+function fallbackCopy(text, cb){
+  const ta=document.createElement("textarea"); ta.value=text;
+  ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try{ document.execCommand("copy"); cb&&cb(); }catch(e){ alert(text); }
+  document.body.removeChild(ta);
+}
+
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),1400);
+}
+
+function updateProgress(){
+  let total=0, done=0;
+  DATA.forEach((c,ci)=>c.questions.forEach((q,qi)=>{ total++; if(state[qid(ci,qi)]) done++; }));
+  document.getElementById("progfill").style.width = total? (100*done/total)+"%" : "0";
+  const tpl = UI.progress || "{done} of {total} processed";
+  document.getElementById("progtxt").textContent = tpl.replace("{done}",done).replace("{total}",total);
+}
+
+document.getElementById("reset").addEventListener("click", ()=>{
+  state={}; save(); render(); updateProgress();
+});
+fCat.addEventListener("change", render);
+fLvl.addEventListener("change", render);
+document.getElementById("f-hide").addEventListener("change", render);
+
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+document.getElementById("foot").textContent = (UI.footer||"Generated study sheet — progress saved locally in your browser.");
+render(); updateProgress();
+</script>
+</body>
+</html>

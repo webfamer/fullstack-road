@@ -1,0 +1,1457 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent 教程学习梳理</title>
+<style>
+:root {
+  --ink:#1e2623;
+  --muted:#66736e;
+  --paper:#f5f2e9;
+  --panel:#fffaf0;
+  --line:#ded7c7;
+  --accent:#0e7c66;
+  --accent-2:#d45b2c;
+  --accent-soft:#dff1e9;
+  --code:#17211e;
+  --code-text:#e9f7ef;
+  --shadow:0 18px 50px rgba(51,45,31,.12);
+}
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  margin:0;
+  color:var(--ink);
+  background:
+    radial-gradient(circle at 16% 10%, rgba(14,124,102,.16), transparent 28rem),
+    radial-gradient(circle at 86% 4%, rgba(212,91,44,.16), transparent 24rem),
+    linear-gradient(135deg, #f7f4ec 0%, #eee8d9 100%);
+  font-family: "Iowan Old Style", "Palatino Linotype", "Songti SC", "Noto Serif CJK SC", Georgia, serif;
+  line-height:1.72;
+}
+body::before {
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  opacity:.32;
+  background-image:
+    linear-gradient(rgba(30,38,35,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30,38,35,.04) 1px, transparent 1px);
+  background-size:28px 28px;
+  mask-image:linear-gradient(to bottom, #000, transparent 82%);
+}
+.layout { display:grid; grid-template-columns:320px minmax(0,1fr); min-height:100vh; }
+.sidebar {
+  position:sticky;
+  top:0;
+  height:100vh;
+  padding:28px 22px;
+  border-right:1px solid rgba(110,98,73,.22);
+  background:rgba(255,250,240,.72);
+  backdrop-filter:blur(16px);
+  overflow:auto;
+}
+.brand { margin-bottom:22px; }
+.eyebrow {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:var(--accent);
+  font:700 12px/1.2 "Avenir Next", "Helvetica Neue", sans-serif;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.eyebrow::before { content:""; width:9px; height:9px; border-radius:50%; background:var(--accent-2); box-shadow:0 0 0 4px rgba(212,91,44,.14); }
+h1 {
+  margin:12px 0 10px;
+  font-size:34px;
+  line-height:1.08;
+  letter-spacing:.01em;
+}
+.meta { color:var(--muted); font-size:14px; }
+.stats {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin:20px 0;
+}
+.stat {
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px;
+  background:rgba(255,255,255,.42);
+}
+.stat b { display:block; font-size:20px; line-height:1; color:var(--accent); }
+.stat span { color:var(--muted); font-size:12px; }
+.search { position:relative; margin:18px 0; }
+.search input {
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:11px 14px;
+  background:#fffdf7;
+  color:var(--ink);
+  font:14px/1.2 "Avenir Next", "Helvetica Neue", sans-serif;
+  outline:none;
+}
+.search input:focus { border-color:var(--accent); box-shadow:0 0 0 4px rgba(14,124,102,.12); }
+.toc { display:flex; flex-direction:column; gap:3px; margin-top:14px; }
+.toc-link {
+  display:block;
+  color:var(--muted);
+  text-decoration:none;
+  border-radius:10px;
+  padding:7px 9px;
+  font:13px/1.35 "Avenir Next", "Helvetica Neue", sans-serif;
+}
+.toc-link:hover, .toc-link.active { color:var(--ink); background:var(--accent-soft); }
+.toc-link.level-1 { font-weight:800; color:var(--ink); margin-top:6px; }
+.main { padding:36px min(6vw,72px) 96px; }
+.hero {
+  position:relative;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:28px;
+  padding:36px;
+  margin-bottom:28px;
+  background:linear-gradient(135deg, rgba(255,250,240,.94), rgba(227,239,229,.84));
+  box-shadow:var(--shadow);
+}
+.hero::after {
+  content:"Agent = LLM + Tools + Memory + Loop";
+  position:absolute;
+  right:-20px;
+  bottom:12px;
+  color:rgba(14,124,102,.09);
+  font:800 44px/1 "Avenir Next", "Helvetica Neue", sans-serif;
+  white-space:nowrap;
+}
+.hero h2 { margin:0 0 12px; font-size:38px; line-height:1.15; }
+.hero p { max-width:760px; margin:0; color:var(--muted); font-size:17px; }
+.toolbar {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin:18px 0 0;
+}
+button {
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:9px 13px;
+  background:#fffdf7;
+  color:var(--ink);
+  cursor:pointer;
+  font:700 13px/1 "Avenir Next", "Helvetica Neue", sans-serif;
+}
+button:hover { border-color:var(--accent); color:var(--accent); }
+.content {
+  max-width:980px;
+  margin:0 auto;
+}
+.doc {
+  border:1px solid var(--line);
+  border-radius:28px;
+  background:rgba(255,250,240,.9);
+  box-shadow:var(--shadow);
+  padding:34px min(5vw,60px);
+}
+.doc h1 { font-size:34px; }
+.doc h2 {
+  margin:48px 0 14px;
+  padding-top:10px;
+  border-top:1px solid rgba(110,98,73,.20);
+  font-size:26px;
+  line-height:1.25;
+}
+.doc h2:first-child { margin-top:0; border-top:0; }
+.doc h3 { margin:30px 0 10px; font-size:20px; }
+.doc h4 { margin:24px 0 8px; font-size:17px; color:var(--accent); }
+.doc p { margin:12px 0; }
+.doc a.anchor {
+  opacity:0;
+  margin-left:8px;
+  color:var(--accent-2);
+  text-decoration:none;
+  font-size:.75em;
+}
+.doc h1:hover .anchor, .doc h2:hover .anchor, .doc h3:hover .anchor, .doc h4:hover .anchor { opacity:1; }
+.doc ul, .doc ol { padding-left:1.45em; margin:10px 0 16px; }
+.doc li { margin:5px 0; }
+.doc blockquote {
+  margin:18px 0;
+  padding:14px 18px;
+  border-left:5px solid var(--accent);
+  background:rgba(14,124,102,.08);
+  border-radius:0 14px 14px 0;
+  font-weight:700;
+}
+.doc code {
+  font-family:"SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size:.92em;
+  background:rgba(14,124,102,.10);
+  color:#075944;
+  border-radius:6px;
+  padding:.12em .34em;
+}
+.doc pre {
+  overflow:auto;
+  border-radius:18px;
+  padding:18px;
+  background:var(--code);
+  color:var(--code-text);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.doc pre code { background:transparent; color:inherit; padding:0; }
+.table-wrap { overflow:auto; margin:16px 0 22px; border:1px solid var(--line); border-radius:16px; }
+table { width:100%; border-collapse:collapse; min-width:560px; background:#fffdf7; }
+th, td { padding:11px 13px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+th { background:#efe8d8; font:800 13px/1.4 "Avenir Next", "Helvetica Neue", sans-serif; }
+tr:last-child td { border-bottom:0; }
+mark { background:#ffe8a3; color:inherit; padding:0 .12em; border-radius:4px; }
+.hidden-by-search { display:none; }
+.backtop { position:fixed; right:24px; bottom:22px; z-index:3; }
+@media (max-width: 980px) {
+  .layout { grid-template-columns:1fr; }
+  .sidebar { position:relative; height:auto; border-right:0; border-bottom:1px solid var(--line); }
+  .toc { max-height:260px; overflow:auto; }
+  .main { padding:22px 14px 80px; }
+  .hero { padding:24px; border-radius:22px; }
+  .hero h2 { font-size:28px; }
+  .hero::after { display:none; }
+  .doc { padding:24px 18px; border-radius:22px; }
+}
+@media print {
+  .sidebar,.hero,.backtop { display:none; }
+  .layout { display:block; }
+  .main { padding:0; }
+  .doc { box-shadow:none; border:0; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="eyebrow">Agent Study Map</div>
+      <h1>Agent 教程学习梳理</h1>
+      <div class="meta">从 Tool / MCP / RAG 到 LangGraph、DeepAgents 与 Memory 的复习地图。</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>24</b><span>个主章节</span></div>
+      <div class="stat"><b>34</b><span>份教程 PDF</span></div>
+    </div>
+    <div class="search"><input id="search" type="search" placeholder="搜索：LangGraph、RAG、MCP..." autocomplete="off"></div>
+    <nav class="toc" id="toc"><a class="toc-link level-1" href="#agent-教程学习梳理"><span>Agent 教程学习梳理</span></a>
+<a class="toc-link level-2" href="#0-这份文档怎么用"><span>0. 这份文档怎么用</span></a>
+<a class="toc-link level-2" href="#1-总体学习路线"><span>1. 总体学习路线</span></a>
+<a class="toc-link level-2" href="#2-agent-的核心心智模型"><span>2. Agent 的核心心智模型</span></a>
+<a class="toc-link level-2" href="#3-tool-agent-的最小行动能力"><span>3. Tool：Agent 的最小行动能力</span></a>
+<a class="toc-link level-2" href="#4-mcp-把工具标准化"><span>4. MCP：把工具标准化</span></a>
+<a class="toc-link level-2" href="#5-rag-让模型使用外部知识"><span>5. RAG：让模型使用外部知识</span></a>
+<a class="toc-link level-2" href="#6-prompt-template-与-output-parser"><span>6. Prompt Template 与 Output Parser</span></a>
+<a class="toc-link level-2" href="#7-runnable-与-lcel"><span>7. Runnable 与 LCEL</span></a>
+<a class="toc-link level-2" href="#8-langchain-与不同模型-api"><span>8. LangChain 与不同模型 API</span></a>
+<a class="toc-link level-2" href="#9-memory-上下文-短期记忆-长期记忆"><span>9. Memory：上下文、短期记忆、长期记忆</span></a>
+<a class="toc-link level-2" href="#10-nestjs-把-agent-能力服务化"><span>10. NestJS：把 Agent 能力服务化</span></a>
+<a class="toc-link level-2" href="#11-agent-loop-从聊天到自动执行"><span>11. Agent Loop：从聊天到自动执行</span></a>
+<a class="toc-link level-2" href="#12-agui-与流式-ui"><span>12. AGUI 与流式 UI</span></a>
+<a class="toc-link level-2" href="#13-langgraph-把-agent-做成状态机"><span>13. LangGraph：把 Agent 做成状态机</span></a>
+<a class="toc-link level-2" href="#14-多-agent-supervisor---worker"><span>14. 多 Agent：Supervisor - Worker</span></a>
+<a class="toc-link level-2" href="#15-deepagents-更工程化的-agent-框架"><span>15. DeepAgents：更工程化的 Agent 框架</span></a>
+<a class="toc-link level-2" href="#16-langsmith-agent-调试与观测"><span>16. LangSmith：Agent 调试与观测</span></a>
+<a class="toc-link level-2" href="#17-stt-tts-语音-agent"><span>17. STT / TTS：语音 Agent</span></a>
+<a class="toc-link level-2" href="#18-常见概念对照表"><span>18. 常见概念对照表</span></a>
+<a class="toc-link level-2" href="#19-从零做一个-agent-应用的步骤"><span>19. 从零做一个 Agent 应用的步骤</span></a>
+<a class="toc-link level-2" href="#20-debug-checklist"><span>20. Debug Checklist</span></a>
+<a class="toc-link level-2" href="#21-面试-项目表达模板"><span>21. 面试/项目表达模板</span></a>
+<a class="toc-link level-2" href="#22-推荐复习顺序"><span>22. 推荐复习顺序</span></a>
+<a class="toc-link level-2" href="#23-一句话总览"><span>23. 一句话总览</span></a></nav>
+  </aside>
+  <main class="main">
+    <section class="hero">
+      <h2>把零散 Agent 概念串成一条工程链路</h2>
+      <p>适合复习时快速定位：工具调用、检索增强、状态编排、流式 UI、长期记忆、观测调试分别在 Agent 系统里承担什么角色。</p>
+      <div class="toolbar">
+        <button id="expandAll">展开阅读模式</button>
+        <button id="printPage">打印 / 导出 PDF</button>
+        <button id="clearSearch">清空搜索</button>
+      </div>
+    </section>
+    <div class="content">
+      <article class="doc" id="doc"><h1 id="agent-教程学习梳理">Agent 教程学习梳理<a class="anchor" href="#agent-教程学习梳理" aria-label="跳转到本节">#</a></h1>
+<h2 id="0-这份文档怎么用">0. 这份文档怎么用<a class="anchor" href="#0-这份文档怎么用" aria-label="跳转到本节">#</a></h2>
+<p>读者：已经把教程看过一遍，但概念、流程和组件边界还没有串起来的学习者。</p>
+<p>读完后应该能做到：</p>
+<ol>
+<li>说清楚一个 Agent 系统由哪些模块组成。</li>
+<li>区分 Tool、MCP、RAG、Memory、LangGraph、DeepAgents 各自解决什么问题。</li>
+<li>看到一个 Agent 需求时，能拆出技术方案：工具、检索、状态、记忆、流式 UI、观测与部署。</li>
+<li>面试或复盘时，能用一条完整链路讲清楚“我理解的 Agent 工程化”。</li>
+</ol>
+<p>这份文档不是逐页抄教程，而是把课程内容重新组织成一张知识地图。</p>
+<h2 id="1-总体学习路线">1. 总体学习路线<a class="anchor" href="#1-总体学习路线" aria-label="跳转到本节">#</a></h2>
+<p>这套教程大致可以分成 9 层：</p>
+<ol>
+<li><strong>Tool 与 mini cursor</strong></li>
+</ol>
+<ul>
+<li>让大模型不只是聊天，而是能调用工具读文件、写文件、执行命令。</li>
+<li>这是 Agent 的最小闭环。</li>
+</ul>
+<ol>
+<li><strong>MCP</strong></li>
+</ol>
+<ul>
+<li>把工具能力标准化，让不同工具以统一协议暴露给模型或 Agent。</li>
+<li>重点是 MCP Client、MCP Server、tool、stdio/http 传输。</li>
+</ul>
+<ol>
+<li><strong>RAG 基础</strong></li>
+</ol>
+<ul>
+<li>解决模型不知道私有知识、长文档、业务资料的问题。</li>
+<li>重点是 loader、splitter、embedding、vector store、retriever、prompt。</li>
+</ul>
+<ol>
+<li><strong>LangChain 基础组件</strong></li>
+</ol>
+<ul>
+<li>Prompt Template、Output Parser、Structured Output、Runnable、LCEL。</li>
+<li>这层负责把模型调用、结构化输出和链式调用组织起来。</li>
+</ul>
+<ol>
+<li><strong>Node/Nest 工程化</strong></li>
+</ol>
+<ul>
+<li>把 LangChain/Agent 能力放进后端服务里。</li>
+<li>重点是 Module、Controller、Service、DI、provider、ORM、数据库。</li>
+</ul>
+<ol>
+<li><strong>Agent Loop 与 UI 流式协议</strong></li>
+</ol>
+<ul>
+<li>Agent 不是一次模型调用，而是“思考 -&gt; 调工具 -&gt; 看结果 -&gt; 再思考”的循环。</li>
+<li>前端需要看见 text、tool input、tool output、最终结果等事件。</li>
+</ul>
+<ol>
+<li><strong>LangGraph 与多 Agent</strong></li>
+</ol>
+<ul>
+<li>用状态图显式管理复杂流程。</li>
+<li>支持 checkpoint、interrupt、条件分支、supervisor-worker、多节点协作。</li>
+</ul>
+<ol>
+<li><strong>高级 RAG 与基础设施</strong></li>
+</ol>
+<ul>
+<li>MySQL、Milvus、Elasticsearch、Neo4j、Redis、PostgreSQL、Docker。</li>
+<li>从简单向量检索走向混合检索、GraphRAG、Agentic RAG 和长期记忆。</li>
+</ul>
+<ol>
+<li><strong>观测、DeepAgents 与长期记忆</strong></li>
+</ol>
+<ul>
+<li>LangSmith 做 trace 和调试。</li>
+<li>DeepAgents 把 Agent 工程化成带 middleware、todo、文件系统、子 Agent 的系统。</li>
+<li>Redis、PostgreSQL、Mem0 处理会话状态和长期记忆。</li>
+</ul>
+<h2 id="2-agent-的核心心智模型">2. Agent 的核心心智模型<a class="anchor" href="#2-agent-的核心心智模型" aria-label="跳转到本节">#</a></h2>
+<p>Agent 可以先用一句话理解：</p>
+<blockquote>Agent = LLM + Prompt + Tools + Memory/State + Loop + Observation。</blockquote>
+<p>更工程化一点：</p>
+<pre><code>User Input
+   |
+   v
+Prompt + History + Retrieved Context
+   |
+   v
+LLM decides:
+   |--------------------|
+   | answer directly    |
+   | call a tool        |
+   | ask for more info  |
+   | plan next step     |
+   |--------------------|
+          |
+          v
+Tool Call / Retrieval / State Update
+          |
+          v
+Observation
+          |
+          v
+LLM continues or stops</code></pre>
+<p>容易混的点：</p>
+<ul>
+<li><strong>LLM</strong> 只负责生成文本或结构化决策。</li>
+<li><strong>Tool</strong> 负责连接真实世界，比如读文件、查数据库、执行命令、调 API。</li>
+<li><strong>Memory</strong> 负责保留上下文或长期偏好。</li>
+<li><strong>RAG</strong> 负责把外部知识塞进上下文。</li>
+<li><strong>LangGraph</strong> 负责把复杂 Agent 流程显式编排成状态机。</li>
+<li><strong>UI stream</strong> 负责让用户看到 Agent 正在做什么。</li>
+<li><strong>LangSmith</strong> 负责看清楚 Agent 为什么错、错在哪一步。</li>
+</ul>
+<h2 id="3-tool-agent-的最小行动能力">3. Tool：Agent 的最小行动能力<a class="anchor" href="#3-tool-agent-的最小行动能力" aria-label="跳转到本节">#</a></h2>
+<h3 id="3-1-tool-是什么">3.1 Tool 是什么<a class="anchor" href="#3-1-tool-是什么" aria-label="跳转到本节">#</a></h3>
+<p>Tool 本质是一个被模型调用的函数，但它必须有清晰的描述和参数 schema。</p>
+<p>模型看到工具描述后，会决定：</p>
+<ol>
+<li>要不要调用工具。</li>
+<li>调哪个工具。</li>
+<li>参数怎么填。</li>
+</ol>
+<p>工具执行后，把结果作为 observation 返回给模型，模型再决定下一步。</p>
+<p>典型消息流：</p>
+<pre><code>SystemMessage
+HumanMessage
+AIMessage(tool_calls)
+ToolMessage(tool_result)
+AIMessage(final_answer or next_tool_call)</code></pre>
+<h3 id="3-2-mini-cursor-的关键思想">3.2 mini cursor 的关键思想<a class="anchor" href="#3-2-mini-cursor-的关键思想" aria-label="跳转到本节">#</a></h3>
+<p>教程里的 mini cursor 是很好的 Agent 入门项目，因为它把 Agent 的基本动作都做出来了：</p>
+<ul>
+<li><code>read_file</code>：读取文件内容。</li>
+<li><code>write_file</code>：写入文件。</li>
+<li><code>execute_command</code>：执行命令。</li>
+<li><code>list_directory</code>：列目录。</li>
+</ul>
+<p>它的工作方式类似：</p>
+<pre><code>用户：帮我创建一个 React todo demo
+  |
+  v
+模型生成 tool call：执行 pnpm create vite
+  |
+  v
+工具执行命令，返回结果
+  |
+  v
+模型继续生成 tool call：写 App.tsx
+  |
+  v
+工具写文件，返回结果
+  |
+  v
+模型继续：安装依赖 / 启动 / 修复错误</code></pre>
+<p>这就是 Agent Loop 的雏形。</p>
+<h3 id="3-3-tool-设计要点">3.3 Tool 设计要点<a class="anchor" href="#3-3-tool-设计要点" aria-label="跳转到本节">#</a></h3>
+<p>设计工具时要注意：</p>
+<ol>
+<li><strong>工具职责单一</strong></li>
+</ol>
+<ul>
+<li>一个工具只做一件事。</li>
+<li>读文件、写文件、执行命令不要混成一个万能工具。</li>
+</ul>
+<ol>
+<li><strong>参数 schema 清晰</strong></li>
+</ol>
+<ul>
+<li>参数名要表达业务含义。</li>
+<li>必填/可选要明确。</li>
+<li>枚举值要尽量限制范围。</li>
+</ul>
+<ol>
+<li><strong>输出可被模型理解</strong></li>
+</ol>
+<ul>
+<li>不要返回一大坨无结构日志。</li>
+<li>尽量返回状态、摘要、关键结果、错误信息。</li>
+</ul>
+<ol>
+<li><strong>危险工具要加护栏</strong></li>
+</ol>
+<ul>
+<li>执行命令、删除文件、访问生产接口都要限制。</li>
+<li>Agent 最容易出问题的地方通常不是“不会想”，而是“能乱动”。</li>
+</ul>
+<h2 id="4-mcp-把工具标准化">4. MCP：把工具标准化<a class="anchor" href="#4-mcp-把工具标准化" aria-label="跳转到本节">#</a></h2>
+<h3 id="4-1-mcp-解决什么问题">4.1 MCP 解决什么问题<a class="anchor" href="#4-1-mcp-解决什么问题" aria-label="跳转到本节">#</a></h3>
+<p>如果每个工具都用自己的接入方式，Agent 生态会很乱。</p>
+<p>MCP 的作用是：</p>
+<blockquote>用统一协议把外部能力暴露成 tools，让不同客户端都能使用。</blockquote>
+<p>可以这样理解：</p>
+<pre><code>Agent / Cursor / LangChain
+        |
+        | MCP Client
+        v
+MCP Server
+        |
+        | exposes tools
+        v
+FileSystem / Browser / Database / Map API / DevTools</code></pre>
+<h3 id="4-2-mcp-的几个关键词">4.2 MCP 的几个关键词<a class="anchor" href="#4-2-mcp-的几个关键词" aria-label="跳转到本节">#</a></h3>
+<ul>
+<li><strong>MCP Server</strong></li>
+<li>提供工具的一侧。</li>
+<li>例如 filesystem server、Chrome DevTools server、高德地图 server。</li>
+</ul>
+<ul>
+<li><strong>MCP Client</strong></li>
+<li>使用工具的一侧。</li>
+<li>可以是 Cursor、Claude Desktop、LangChain 程序。</li>
+</ul>
+<ul>
+<li><strong>transport</strong></li>
+<li>常见有 stdio 和 http。</li>
+<li>stdio 适合本地进程工具。</li>
+<li>http 适合远程服务工具。</li>
+</ul>
+<ul>
+<li><strong>tool</strong></li>
+<li>MCP Server 暴露的具体能力。</li>
+<li>本质仍然是“带 schema 的函数”。</li>
+</ul>
+<h3 id="4-3-tool-和-mcp-的区别">4.3 Tool 和 MCP 的区别<a class="anchor" href="#4-3-tool-和-mcp-的区别" aria-label="跳转到本节">#</a></h3>
+<div class="table-wrap"><table><thead>
+<tr><th>概念</th><th>重点</th><th>类比</th></tr>
+</thead><tbody>
+<tr><td>Tool</td><td>一个可调用能力</td><td>函数</td></tr>
+<tr><td>MCP Server</td><td>一组工具的服务端</td><td>插件服务</td></tr>
+<tr><td>MCP Client</td><td>连接 MCP Server 并调用工具</td><td>工具消费者</td></tr>
+<tr><td>MCP</td><td>工具接入协议</td><td>USB/HTTP 这类统一接口</td></tr>
+</tbody></table></div>
+<p>一句话：</p>
+<blockquote>Tool 是能力，MCP 是把能力标准化暴露出去的协议。</blockquote>
+<h2 id="5-rag-让模型使用外部知识">5. RAG：让模型使用外部知识<a class="anchor" href="#5-rag-让模型使用外部知识" aria-label="跳转到本节">#</a></h2>
+<h3 id="5-1-rag-的基础链路">5.1 RAG 的基础链路<a class="anchor" href="#5-1-rag-的基础链路" aria-label="跳转到本节">#</a></h3>
+<p>RAG 是 Retrieval-Augmented Generation，核心不是“让模型记住知识”，而是在回答前把相关知识检索出来，放进 prompt。</p>
+<p>基础流程：</p>
+<pre><code>Documents
+  |
+  v
+Loader
+  |
+  v
+Splitter
+  |
+  v
+Chunks
+  |
+  v
+Embedding Model
+  |
+  v
+Vector Store
+  |
+  v
+Retriever(query)
+  |
+  v
+Relevant Chunks
+  |
+  v
+Prompt + LLM
+  |
+  v
+Answer</code></pre>
+<h3 id="5-2-loader-document-splitter-chunk">5.2 Loader、Document、Splitter、Chunk<a class="anchor" href="#5-2-loader-document-splitter-chunk" aria-label="跳转到本节">#</a></h3>
+<p>这几个概念特别容易混：</p>
+<ul>
+<li><strong>Loader</strong></li>
+<li>负责从 PDF、Word、网页、EPUB、YouTube、URL 等来源加载内容。</li>
+</ul>
+<ul>
+<li><strong>Document</strong></li>
+<li>LangChain 中承载文本和 metadata 的对象。</li>
+<li>通常包含 <code>pageContent</code> 和 <code>metadata</code>。</li>
+</ul>
+<ul>
+<li><strong>Splitter</strong></li>
+<li>把长文档切成较小 chunk。</li>
+<li>常见有 CharacterTextSplitter、RecursiveCharacterTextSplitter、MarkdownTextSplitter。</li>
+</ul>
+<ul>
+<li><strong>Chunk</strong></li>
+<li>被向量化和检索的最小文本片段。</li>
+</ul>
+<h3 id="5-3-chunk-size-和-overlap">5.3 chunk size 和 overlap<a class="anchor" href="#5-3-chunk-size-和-overlap" aria-label="跳转到本节">#</a></h3>
+<p>切块不是越小越好，也不是越大越好。</p>
+<ul>
+<li>chunk 太小：</li>
+<li>上下文不完整。</li>
+<li>检索结果碎片化。</li>
+</ul>
+<ul>
+<li>chunk 太大：</li>
+<li>噪声多。</li>
+<li>占用 token。</li>
+<li>相似度不够精准。</li>
+</ul>
+<ul>
+<li>overlap：</li>
+<li>用来避免切块边界丢语义。</li>
+<li>常见经验是 chunk size 的 10% 到 20%。</li>
+</ul>
+<h3 id="5-4-milvus-mysql-elasticsearch-的分工">5.4 Milvus、MySQL、Elasticsearch 的分工<a class="anchor" href="#5-4-milvus-mysql-elasticsearch-的分工" aria-label="跳转到本节">#</a></h3>
+<p>教程里反复出现 MySQL + Milvus + Elasticsearch，是因为它们解决的问题不同：</p>
+<div class="table-wrap"><table><thead>
+<tr><th>系统</th><th>擅长</th><th>在 RAG 中的角色</th></tr>
+</thead><tbody>
+<tr><td>MySQL</td><td>结构化数据、事务、业务表</td><td>存业务实体、文档信息、chunk 元数据</td></tr>
+<tr><td>Milvus</td><td>向量相似度检索</td><td>按语义找相似 chunk</td></tr>
+<tr><td>Elasticsearch</td><td>全文检索、关键词、分词、过滤</td><td>按关键词、标签、字段做精确或近似匹配</td></tr>
+<tr><td>Neo4j</td><td>图关系</td><td>做 GraphRAG，表达实体关系</td></tr>
+<tr><td>Redis</td><td>缓存、短期状态、TTL</td><td>会话状态、任务状态、临时记忆</td></tr>
+<tr><td>PostgreSQL</td><td>关系数据，也可配合向量扩展</td><td>存对话、消息、用户数据、长期状态</td></tr>
+</tbody></table></div>
+<h3 id="5-5-naive-rag-hybrid-rag-agentic-rag-graphrag">5.5 Naive RAG、Hybrid RAG、Agentic RAG、GraphRAG<a class="anchor" href="#5-5-naive-rag-hybrid-rag-agentic-rag-graphrag" aria-label="跳转到本节">#</a></h3>
+<h4 id="naive-rag">Naive RAG<a class="anchor" href="#naive-rag" aria-label="跳转到本节">#</a></h4>
+<p>最基础：</p>
+<pre><code>query -&gt; vector search -&gt; topK chunks -&gt; prompt -&gt; answer</code></pre>
+<p>适合简单文档问答。</p>
+<h4 id="hybrid-rag">Hybrid RAG<a class="anchor" href="#hybrid-rag" aria-label="跳转到本节">#</a></h4>
+<p>结合向量检索和关键词检索：</p>
+<pre><code>query
+  |----------------|
+  v                v
+Milvus         Elasticsearch
+  |                |
+  |---- merge/rerank
+          |
+          v
+       prompt</code></pre>
+<p>适合既要语义相似，又要关键词精确命中的场景。</p>
+<h4 id="agentic-rag">Agentic RAG<a class="anchor" href="#agentic-rag" aria-label="跳转到本节">#</a></h4>
+<p>让 Agent 决定怎么检索、是否改写 query、是否多轮检索、是否验证答案。</p>
+<p>典型流程：</p>
+<pre><code>question
+  |
+  v
+analyze question
+  |
+  v
+choose retrieval strategy
+  |
+  v
+retrieve / rerank / verify
+  |
+  v
+answer or retry</code></pre>
+<h4 id="graphrag">GraphRAG<a class="anchor" href="#graphrag" aria-label="跳转到本节">#</a></h4>
+<p>把知识组织成实体和关系。</p>
+<p>适合：</p>
+<ul>
+<li>人物、组织、事件之间关系复杂。</li>
+<li>单个 chunk 无法表达完整上下文。</li>
+<li>需要沿关系路径推理。</li>
+</ul>
+<h2 id="6-prompt-template-与-output-parser">6. Prompt Template 与 Output Parser<a class="anchor" href="#6-prompt-template-与-output-parser" aria-label="跳转到本节">#</a></h2>
+<h3 id="6-1-prompt-template">6.1 Prompt Template<a class="anchor" href="#6-1-prompt-template" aria-label="跳转到本节">#</a></h3>
+<p>Prompt Template 不是简单字符串拼接，而是让 prompt 可维护、可复用、可测试。</p>
+<p>常见组成：</p>
+<ul>
+<li>任务说明。</li>
+<li>输入变量。</li>
+<li>输出格式要求。</li>
+<li>示例。</li>
+<li>约束条件。</li>
+</ul>
+<p>例子：</p>
+<pre><code>你是一个数据分析助手。
+请根据用户问题和字段说明生成 SQL。
+
+用户问题：{question}
+字段说明：{schema}
+
+要求：
+1. 只输出 SQL。
+2. 不要解释。
+3. 表名必须来自字段说明。</code></pre>
+<h3 id="6-2-output-parser">6.2 Output Parser<a class="anchor" href="#6-2-output-parser" aria-label="跳转到本节">#</a></h3>
+<p>Output Parser 解决的问题是：</p>
+<blockquote>模型输出不稳定，程序需要稳定的数据结构。</blockquote>
+<p>没有 parser：</p>
+<pre><code>模型可能输出：
+名字：张三
+年龄：18</code></pre>
+<p>有 parser：</p>
+<pre><code>{
+  &quot;name&quot;: &quot;张三&quot;,
+  &quot;age&quot;: 18
+}</code></pre>
+<h3 id="6-3-structured-output-和-tool-calling-的关系">6.3 Structured Output 和 Tool Calling 的关系<a class="anchor" href="#6-3-structured-output-和-tool-calling-的关系" aria-label="跳转到本节">#</a></h3>
+<p>很多框架的 structured output 底层会用 tool/function calling。</p>
+<p>区别可以这样理解：</p>
+<div class="table-wrap"><table><thead>
+<tr><th>能力</th><th>目标</th></tr>
+</thead><tbody>
+<tr><td>Structured Output</td><td>让模型按 schema 输出结构化数据</td></tr>
+<tr><td>Tool Calling</td><td>让模型决定调用哪个工具以及参数</td></tr>
+</tbody></table></div>
+<p>如果只是要稳定 JSON，用 structured output。</p>
+<p>如果要让模型调用真实函数，用 tool calling。</p>
+<h2 id="7-runnable-与-lcel">7. Runnable 与 LCEL<a class="anchor" href="#7-runnable-与-lcel" aria-label="跳转到本节">#</a></h2>
+<h3 id="7-1-runnable-是什么">7.1 Runnable 是什么<a class="anchor" href="#7-1-runnable-是什么" aria-label="跳转到本节">#</a></h3>
+<p>LangChain 里很多东西都可以被看成 Runnable：</p>
+<ul>
+<li>PromptTemplate</li>
+<li>ChatModel</li>
+<li>OutputParser</li>
+<li>Retriever</li>
+<li>RunnableLambda</li>
+<li>RunnableBranch</li>
+<li>RunnableSequence</li>
+</ul>
+<p>Runnable 统一了调用方式：</p>
+<ul>
+<li><code>invoke</code>：单次调用。</li>
+<li><code>batch</code>：批量调用。</li>
+<li><code>stream</code>：流式调用。</li>
+</ul>
+<h3 id="7-2-lcel-的意义">7.2 LCEL 的意义<a class="anchor" href="#7-2-lcel-的意义" aria-label="跳转到本节">#</a></h3>
+<p>LCEL 可以把多个 Runnable 串起来：</p>
+<pre><code>input
+  |
+  v
+PromptTemplate
+  |
+  v
+ChatModel
+  |
+  v
+OutputParser
+  |
+  v
+structured result</code></pre>
+<p>代码上就是类似：</p>
+<pre><code>prompt | model | parser</code></pre>
+<h3 id="7-3-runnablebranch-runnablelambda-runnablepassthrough">7.3 RunnableBranch / RunnableLambda / RunnablePassthrough<a class="anchor" href="#7-3-runnablebranch-runnablelambda-runnablepassthrough" aria-label="跳转到本节">#</a></h3>
+<ul>
+<li><strong>RunnableLambda</strong></li>
+<li>把普通函数包装成链的一部分。</li>
+</ul>
+<ul>
+<li><strong>RunnableBranch</strong></li>
+<li>做 if/else 分支。</li>
+<li>例如根据输入类型选择不同 prompt。</li>
+</ul>
+<ul>
+<li><strong>RunnablePassthrough</strong></li>
+<li>原样透传输入，常用于并行拼装字段。</li>
+</ul>
+<p>LCEL 适合中等复杂度链路。</p>
+<p>如果流程变成多节点、多循环、多条件、多状态，就应该考虑 LangGraph。</p>
+<h2 id="8-langchain-与不同模型-api">8. LangChain 与不同模型 API<a class="anchor" href="#8-langchain-与不同模型-api" aria-label="跳转到本节">#</a></h2>
+<p>教程里对比了 OpenAI、Anthropic、Gemini 等模型 API。</p>
+<p>核心点：</p>
+<blockquote>不同模型厂商 API 格式不同，LangChain 做了一层统一抽象。</blockquote>
+<p>例如：</p>
+<ul>
+<li>OpenAI 常见是 <code>messages</code>。</li>
+<li>Anthropic 把 system 单独放。</li>
+<li>Gemini 是 contents/parts 风格。</li>
+</ul>
+<p>LangChain 的价值：</p>
+<ul>
+<li>统一 ChatModel 调用。</li>
+<li>统一消息对象。</li>
+<li>统一 tool calling。</li>
+<li>统一 prompt、parser、runnable。</li>
+</ul>
+<p>但要注意：</p>
+<ul>
+<li>统一抽象不代表不同模型行为完全一致。</li>
+<li>Tool calling、structured output、streaming 的兼容度仍然要实测。</li>
+<li>模型能力差异会直接影响 Agent 稳定性。</li>
+</ul>
+<h2 id="9-memory-上下文-短期记忆-长期记忆">9. Memory：上下文、短期记忆、长期记忆<a class="anchor" href="#9-memory-上下文-短期记忆-长期记忆" aria-label="跳转到本节">#</a></h2>
+<h3 id="9-1-memory-不等于-rag">9.1 Memory 不等于 RAG<a class="anchor" href="#9-1-memory-不等于-rag" aria-label="跳转到本节">#</a></h3>
+<p>这是一个非常重要的区分：</p>
+<div class="table-wrap"><table><thead>
+<tr><th>概念</th><th>回答的问题</th></tr>
+</thead><tbody>
+<tr><td>Chat History</td><td>这轮对话前面说了什么</td></tr>
+<tr><td>Memory</td><td>用户/任务/偏好/状态需要被记住什么</td></tr>
+<tr><td>RAG</td><td>外部知识库里有什么相关资料</td></tr>
+</tbody></table></div>
+<h3 id="9-2-短期记忆">9.2 短期记忆<a class="anchor" href="#9-2-短期记忆" aria-label="跳转到本节">#</a></h3>
+<p>短期记忆通常就是 messages：</p>
+<pre><code>SystemMessage
+HumanMessage
+AIMessage
+ToolMessage
+HumanMessage
+...</code></pre>
+<p>问题：</p>
+<ul>
+<li>token 有上限。</li>
+<li>长对话会越来越贵。</li>
+<li>无关历史会干扰模型。</li>
+</ul>
+<p>处理方式：</p>
+<ul>
+<li>截断。</li>
+<li>摘要。</li>
+<li>只保留关键状态。</li>
+<li>把长期信息写入数据库或 memory 服务。</li>
+</ul>
+<h3 id="9-3-redis-postgresql-mem0">9.3 Redis / PostgreSQL / Mem0<a class="anchor" href="#9-3-redis-postgresql-mem0" aria-label="跳转到本节">#</a></h3>
+<p>教程后面进入 Redis、PostgreSQL、Mem0，重点是记忆持久化。</p>
+<ul>
+<li>Redis：</li>
+<li>适合短期状态、TTL、会话缓存。</li>
+<li>例如 CLI Agent 的当前任务状态、临时上下文。</li>
+</ul>
+<ul>
+<li>PostgreSQL：</li>
+<li>适合长期结构化存储。</li>
+<li>例如 conversations、messages、users。</li>
+</ul>
+<ul>
+<li>Mem0：</li>
+<li>更像开箱即用的 Agent Memory 服务。</li>
+<li>可以 add conversation，再 search 用户相关记忆。</li>
+</ul>
+<p>长期记忆常见模式：</p>
+<pre><code>new message
+  |
+  v
+extract memory candidates
+  |
+  v
+store user facts/preferences/task history
+  |
+  v
+future query searches memory
+  |
+  v
+inject relevant memories into prompt</code></pre>
+<h2 id="10-nestjs-把-agent-能力服务化">10. NestJS：把 Agent 能力服务化<a class="anchor" href="#10-nestjs-把-agent-能力服务化" aria-label="跳转到本节">#</a></h2>
+<p>教程中多次用 NestJS 承载 Agent。</p>
+<h3 id="10-1-nest-的基本结构">10.1 Nest 的基本结构<a class="anchor" href="#10-1-nest-的基本结构" aria-label="跳转到本节">#</a></h3>
+<pre><code>Module
+  |
+  |-- Controller
+  |      |-- 接收 HTTP 请求
+  |
+  |-- Service
+  |      |-- 业务逻辑
+  |
+  |-- Provider
+         |-- 可注入依赖，如 ChatModel、数据库连接、工具服务</code></pre>
+<p>关键词：</p>
+<ul>
+<li>MVC</li>
+<li>DI / IoC</li>
+<li>Controller</li>
+<li>Service</li>
+<li>Module</li>
+<li>Provider</li>
+<li><code>@Injectable</code></li>
+<li><code>useFactory</code></li>
+</ul>
+<h3 id="10-2-为什么-agent-适合放进后端服务">10.2 为什么 Agent 适合放进后端服务<a class="anchor" href="#10-2-为什么-agent-适合放进后端服务" aria-label="跳转到本节">#</a></h3>
+<p>因为 Agent 通常需要：</p>
+<ul>
+<li>管理 API key。</li>
+<li>调工具和数据库。</li>
+<li>持久化会话。</li>
+<li>记录 trace。</li>
+<li>控制权限。</li>
+<li>对前端提供 SSE/WebSocket 流。</li>
+</ul>
+<p>这些都不适合完全放在浏览器端。</p>
+<h3 id="10-3-typeorm-与数据库">10.3 TypeORM 与数据库<a class="anchor" href="#10-3-typeorm-与数据库" aria-label="跳转到本节">#</a></h3>
+<p>TypeORM 把数据库表映射成实体类。</p>
+<p>常见结构：</p>
+<pre><code>Entity -&gt; Repository -&gt; Service -&gt; Controller</code></pre>
+<p>在 Agent 系统里，数据库常用于：</p>
+<ul>
+<li>用户。</li>
+<li>会话。</li>
+<li>消息。</li>
+<li>工具调用记录。</li>
+<li>文档元数据。</li>
+<li>任务状态。</li>
+</ul>
+<h2 id="11-agent-loop-从聊天到自动执行">11. Agent Loop：从聊天到自动执行<a class="anchor" href="#11-agent-loop-从聊天到自动执行" aria-label="跳转到本节">#</a></h2>
+<h3 id="11-1-最小-agent-loop">11.1 最小 Agent Loop<a class="anchor" href="#11-1-最小-agent-loop" aria-label="跳转到本节">#</a></h3>
+<pre><code>while not done:
+    send messages to model
+    if model returns final answer:
+        stop
+    if model returns tool call:
+        execute tool
+        append ToolMessage
+        continue</code></pre>
+<h3 id="11-2-agent-loop-的关键风险">11.2 Agent Loop 的关键风险<a class="anchor" href="#11-2-agent-loop-的关键风险" aria-label="跳转到本节">#</a></h3>
+<ol>
+<li><strong>无限循环</strong></li>
+</ol>
+<ul>
+<li>工具结果不满足模型预期，模型反复调用。</li>
+<li>需要 max steps。</li>
+</ul>
+<ol>
+<li><strong>错误工具参数</strong></li>
+</ol>
+<ul>
+<li>schema 不清晰或模型理解错。</li>
+<li>需要参数校验。</li>
+</ul>
+<ol>
+<li><strong>工具执行失败</strong></li>
+</ol>
+<ul>
+<li>命令失败、API 超时、权限不足。</li>
+<li>需要把错误结构化返回给模型。</li>
+</ul>
+<ol>
+<li><strong>危险动作</strong></li>
+</ol>
+<ul>
+<li>删除文件、改配置、访问生产环境。</li>
+<li>需要确认和权限边界。</li>
+</ul>
+<ol>
+<li><strong>上下文污染</strong></li>
+</ol>
+<ul>
+<li>工具输出太大或太乱。</li>
+<li>需要摘要和裁剪。</li>
+</ul>
+<h2 id="12-agui-与流式-ui">12. AGUI 与流式 UI<a class="anchor" href="#12-agui-与流式-ui" aria-label="跳转到本节">#</a></h2>
+<h3 id="12-1-为什么-agent-需要流式-ui">12.1 为什么 Agent 需要流式 UI<a class="anchor" href="#12-1-为什么-agent-需要流式-ui" aria-label="跳转到本节">#</a></h3>
+<p>Agent 经常不是一次回答结束，而是会：</p>
+<ul>
+<li>生成文本。</li>
+<li>调工具。</li>
+<li>等工具输出。</li>
+<li>再生成。</li>
+<li>再调用。</li>
+</ul>
+<p>如果前端只等最终结果，用户会觉得“卡死”。</p>
+<p>所以需要把中间过程流式展示出来。</p>
+<h3 id="12-2-agui-vercel-ai-sdk-数据流事件">12.2 AGUI / Vercel AI SDK 数据流事件<a class="anchor" href="#12-2-agui-vercel-ai-sdk-数据流事件" aria-label="跳转到本节">#</a></h3>
+<p>教程中提到的事件类似：</p>
+<ul>
+<li><code>text-start</code></li>
+<li><code>text-delta</code></li>
+<li><code>text-end</code></li>
+<li><code>tool-input-start</code></li>
+<li><code>tool-input-delta</code></li>
+<li><code>tool-input-available</code></li>
+<li><code>tool-output-available</code></li>
+</ul>
+<p>可以理解成：</p>
+<pre><code>AI 开始说话
+  -&gt; 文本增量输出
+  -&gt; 文本结束
+  -&gt; 工具输入开始
+  -&gt; 工具参数逐步可见
+  -&gt; 工具开始执行
+  -&gt; 工具输出可见
+  -&gt; AI 继续回答</code></pre>
+<h3 id="12-3-sse-和前端渲染">12.3 SSE 和前端渲染<a class="anchor" href="#12-3-sse-和前端渲染" aria-label="跳转到本节">#</a></h3>
+<p>SSE 很适合 Agent UI：</p>
+<ul>
+<li>服务端单向推送。</li>
+<li>浏览器支持简单。</li>
+<li>适合文本流、步骤流、工具调用流。</li>
+</ul>
+<p>前端要处理：</p>
+<ul>
+<li>消息追加。</li>
+<li>步骤状态。</li>
+<li>工具调用卡片。</li>
+<li>错误状态。</li>
+<li>中断和重试。</li>
+<li>连接断开。</li>
+</ul>
+<h2 id="13-langgraph-把-agent-做成状态机">13. LangGraph：把 Agent 做成状态机<a class="anchor" href="#13-langgraph-把-agent-做成状态机" aria-label="跳转到本节">#</a></h2>
+<h3 id="13-1-为什么需要-langgraph">13.1 为什么需要 LangGraph<a class="anchor" href="#13-1-为什么需要-langgraph" aria-label="跳转到本节">#</a></h3>
+<p>LCEL 适合线性链路。</p>
+<p>但复杂 Agent 需要：</p>
+<ul>
+<li>多节点。</li>
+<li>条件分支。</li>
+<li>循环。</li>
+<li>状态保存。</li>
+<li>人工中断。</li>
+<li>多 Agent 协作。</li>
+</ul>
+<p>这就是 LangGraph 的场景。</p>
+<h3 id="13-2-langgraph-基本模型">13.2 LangGraph 基本模型<a class="anchor" href="#13-2-langgraph-基本模型" aria-label="跳转到本节">#</a></h3>
+<pre><code>State
+  |
+  v
+START -&gt; nodeA -&gt; nodeB -&gt; condition
+                         |       |
+                         v       v
+                       nodeC    END</code></pre>
+<p>核心概念：</p>
+<ul>
+<li><strong>State</strong></li>
+<li>整个图共享的状态。</li>
+<li>例如 question、messages、retrievedDocs、toolResults、answer。</li>
+</ul>
+<ul>
+<li><strong>Node</strong></li>
+<li>一个处理步骤。</li>
+<li>可以是 LLM 调用、检索、工具执行、校验、总结。</li>
+</ul>
+<ul>
+<li><strong>Edge</strong></li>
+<li>节点之间的连接。</li>
+</ul>
+<ul>
+<li><strong>Conditional Edge</strong></li>
+<li>根据状态决定下一步。</li>
+</ul>
+<ul>
+<li><strong>Checkpoint</strong></li>
+<li>保存状态，支持恢复。</li>
+</ul>
+<ul>
+<li><strong>Interrupt</strong></li>
+<li>中断流程，让人类确认或输入。</li>
+</ul>
+<h3 id="13-3-langgraph-适合哪些-agent">13.3 LangGraph 适合哪些 Agent<a class="anchor" href="#13-3-langgraph-适合哪些-agent" aria-label="跳转到本节">#</a></h3>
+<p>适合：</p>
+<ul>
+<li>多步 RAG。</li>
+<li>SQL Agent。</li>
+<li>多工具 Agent。</li>
+<li>需要人工确认的 Agent。</li>
+<li>长任务 Agent。</li>
+<li>多 Agent 协作。</li>
+</ul>
+<p>不适合：</p>
+<ul>
+<li>只有一次 prompt -&gt; answer。</li>
+<li>线性 prompt -&gt; model -&gt; parser。</li>
+</ul>
+<h2 id="14-多-agent-supervisor---worker">14. 多 Agent：Supervisor - Worker<a class="anchor" href="#14-多-agent-supervisor---worker" aria-label="跳转到本节">#</a></h2>
+<h3 id="14-1-多-agent-解决什么问题">14.1 多 Agent 解决什么问题<a class="anchor" href="#14-1-多-agent-解决什么问题" aria-label="跳转到本节">#</a></h3>
+<p>一个 Agent 什么都做，容易：</p>
+<ul>
+<li>prompt 太长。</li>
+<li>工具太多。</li>
+<li>角色不清。</li>
+<li>决策不稳定。</li>
+</ul>
+<p>多 Agent 把任务拆给不同角色：</p>
+<pre><code>Supervisor
+  |
+  |-- Researcher
+  |-- Analyst
+  |-- Coder
+  |-- Editor</code></pre>
+<h3 id="14-2-supervisor-的职责">14.2 Supervisor 的职责<a class="anchor" href="#14-2-supervisor-的职责" aria-label="跳转到本节">#</a></h3>
+<p>Supervisor 不应该亲自做所有事，而是：</p>
+<ul>
+<li>理解目标。</li>
+<li>拆任务。</li>
+<li>分配给合适 worker。</li>
+<li>整合结果。</li>
+<li>判断是否继续。</li>
+</ul>
+<h3 id="14-3-worker-的职责">14.3 Worker 的职责<a class="anchor" href="#14-3-worker-的职责" aria-label="跳转到本节">#</a></h3>
+<p>Worker 应该：</p>
+<ul>
+<li>专注一个子任务。</li>
+<li>使用有限工具。</li>
+<li>输出结构化结果。</li>
+<li>不擅自扩大范围。</li>
+</ul>
+<p>多 Agent 的风险：</p>
+<ul>
+<li>成本上升。</li>
+<li>延迟变长。</li>
+<li>互相传递错误。</li>
+<li>最终整合质量不稳定。</li>
+</ul>
+<h2 id="15-deepagents-更工程化的-agent-框架">15. DeepAgents：更工程化的 Agent 框架<a class="anchor" href="#15-deepagents-更工程化的-agent-框架" aria-label="跳转到本节">#</a></h2>
+<p>DeepAgents 可以理解为在 LangGraph 基础上做了一层更“产品化”的 Agent 抽象。</p>
+<p>教程里出现的关键词：</p>
+<ul>
+<li><code>createDeepAgent</code></li>
+<li>middleware</li>
+<li>tool</li>
+<li>prompt</li>
+<li>todo</li>
+<li>file system</li>
+<li>subagents</li>
+<li>researcher</li>
+<li>analyst</li>
+<li>editor</li>
+<li>QuickJS REPL</li>
+</ul>
+<h3 id="15-1-deepagents-的价值">15.1 DeepAgents 的价值<a class="anchor" href="#15-1-deepagents-的价值" aria-label="跳转到本节">#</a></h3>
+<p>它把常见 Agent 工程能力打包：</p>
+<ul>
+<li>任务规划。</li>
+<li>子 Agent。</li>
+<li>文件读写。</li>
+<li>todo 管理。</li>
+<li>中间件扩展。</li>
+<li>LangSmith 观测。</li>
+<li>更接近真实可用的研究/分析/编辑助手。</li>
+</ul>
+<h3 id="15-2-middleware-的作用">15.2 middleware 的作用<a class="anchor" href="#15-2-middleware-的作用" aria-label="跳转到本节">#</a></h3>
+<p>middleware 可以在 Agent 执行前后插入逻辑：</p>
+<ul>
+<li>修改输入。</li>
+<li>注入上下文。</li>
+<li>记录日志。</li>
+<li>限制工具。</li>
+<li>拦截危险操作。</li>
+<li>做 trace。</li>
+</ul>
+<p>这类似后端框架里的中间件思想。</p>
+<h2 id="16-langsmith-agent-调试与观测">16. LangSmith：Agent 调试与观测<a class="anchor" href="#16-langsmith-agent-调试与观测" aria-label="跳转到本节">#</a></h2>
+<p>Agent 很难调试，因为错误可能来自：</p>
+<ul>
+<li>prompt。</li>
+<li>模型能力。</li>
+<li>检索结果。</li>
+<li>工具输出。</li>
+<li>状态传递。</li>
+<li>分支判断。</li>
+<li>token 截断。</li>
+</ul>
+<p>LangSmith 的价值是 trace：</p>
+<pre><code>Run
+  |
+  |-- Prompt input
+  |-- Model output
+  |-- Tool call
+  |-- Tool result
+  |-- Retriever result
+  |-- Error stack
+  |-- Token / latency</code></pre>
+<p>有了 trace，才能回答：</p>
+<ul>
+<li>模型到底看到了什么？</li>
+<li>它为什么调这个工具？</li>
+<li>检索结果是不是错的？</li>
+<li>哪个节点耗时最长？</li>
+<li>哪一步 token 爆了？</li>
+</ul>
+<h2 id="17-stt-tts-语音-agent">17. STT / TTS：语音 Agent<a class="anchor" href="#17-stt-tts-语音-agent" aria-label="跳转到本节">#</a></h2>
+<p>教程中还有 STT 和 TTS。</p>
+<ul>
+<li>STT：Speech To Text，把语音转文字。</li>
+<li>TTS：Text To Speech，把文本转语音。</li>
+</ul>
+<p>语音 Agent 链路：</p>
+<pre><code>microphone audio
+  |
+  v
+STT
+  |
+  v
+Agent / LLM
+  |
+  v
+TTS
+  |
+  v
+audio output</code></pre>
+<p>和文本 Agent 相比，语音 Agent 还要关注：</p>
+<ul>
+<li>延迟。</li>
+<li>打断。</li>
+<li>语音分段。</li>
+<li>噪音。</li>
+<li>播放状态。</li>
+<li>用户说话和模型说话的轮转。</li>
+</ul>
+<h2 id="18-常见概念对照表">18. 常见概念对照表<a class="anchor" href="#18-常见概念对照表" aria-label="跳转到本节">#</a></h2>
+<div class="table-wrap"><table><thead>
+<tr><th>容易混的概念</th><th>怎么区分</th></tr>
+</thead><tbody>
+<tr><td>Tool vs MCP</td><td>Tool 是能力；MCP 是暴露和连接工具的协议</td></tr>
+<tr><td>Tool Calling vs Structured Output</td><td>前者调用函数；后者稳定输出结构化数据</td></tr>
+<tr><td>Prompt Template vs System Prompt</td><td>Template 是可复用模板；System Prompt 是对模型角色和规则的最高优先级指令</td></tr>
+<tr><td>RAG vs Memory</td><td>RAG 查外部知识；Memory 记用户/会话/任务历史</td></tr>
+<tr><td>Milvus vs Elasticsearch</td><td>Milvus 做语义向量检索；ES 做关键词/全文/过滤</td></tr>
+<tr><td>LCEL vs LangGraph</td><td>LCEL 适合线性链；LangGraph 适合状态机和复杂流程</td></tr>
+<tr><td>Agent vs Workflow</td><td>Agent 更自主决策；Workflow 更固定流程</td></tr>
+<tr><td>SSE vs WebSocket</td><td>SSE 适合服务端单向流；WebSocket 适合双向实时通信</td></tr>
+<tr><td>Checkpoint vs Memory</td><td>Checkpoint 保存流程状态；Memory 保存对话或用户长期信息</td></tr>
+<tr><td>DeepAgents vs LangGraph</td><td>DeepAgents 是更上层的 Agent 工程框架，底层可基于 LangGraph</td></tr>
+</tbody></table></div>
+<h2 id="19-从零做一个-agent-应用的步骤">19. 从零做一个 Agent 应用的步骤<a class="anchor" href="#19-从零做一个-agent-应用的步骤" aria-label="跳转到本节">#</a></h2>
+<p>可以按这个清单设计：</p>
+<h3 id="step-1-定义任务边界">Step 1：定义任务边界<a class="anchor" href="#step-1-定义任务边界" aria-label="跳转到本节">#</a></h3>
+<p>先回答：</p>
+<ul>
+<li>用户要完成什么任务？</li>
+<li>Agent 能自主到什么程度？</li>
+<li>哪些动作需要用户确认？</li>
+<li>最终输出是什么格式？</li>
+</ul>
+<h3 id="step-2-选择模型">Step 2：选择模型<a class="anchor" href="#step-2-选择模型" aria-label="跳转到本节">#</a></h3>
+<p>考虑：</p>
+<ul>
+<li>是否支持 tool calling。</li>
+<li>是否支持 structured output。</li>
+<li>上下文窗口大小。</li>
+<li>成本。</li>
+<li>延迟。</li>
+<li>中文能力。</li>
+</ul>
+<h3 id="step-3-设计-prompt">Step 3：设计 Prompt<a class="anchor" href="#step-3-设计-prompt" aria-label="跳转到本节">#</a></h3>
+<p>Prompt 至少包含：</p>
+<ul>
+<li>角色。</li>
+<li>任务目标。</li>
+<li>输入说明。</li>
+<li>工具使用规则。</li>
+<li>输出格式。</li>
+<li>禁止行为。</li>
+<li>错误处理方式。</li>
+</ul>
+<h3 id="step-4-设计-tools">Step 4：设计 Tools<a class="anchor" href="#step-4-设计-tools" aria-label="跳转到本节">#</a></h3>
+<p>每个工具要明确：</p>
+<ul>
+<li>名字。</li>
+<li>描述。</li>
+<li>参数 schema。</li>
+<li>返回结构。</li>
+<li>错误结构。</li>
+<li>权限边界。</li>
+</ul>
+<h3 id="step-5-决定是否需要-rag">Step 5：决定是否需要 RAG<a class="anchor" href="#step-5-决定是否需要-rag" aria-label="跳转到本节">#</a></h3>
+<p>如果需要外部知识：</p>
+<ul>
+<li>用什么 loader。</li>
+<li>如何 split。</li>
+<li>用什么 embedding。</li>
+<li>存在哪个 vector store。</li>
+<li>是否需要 ES 混合检索。</li>
+<li>是否需要 rerank。</li>
+</ul>
+<h3 id="step-6-决定是否需要状态图">Step 6：决定是否需要状态图<a class="anchor" href="#step-6-决定是否需要状态图" aria-label="跳转到本节">#</a></h3>
+<p>如果只是线性链路，用 LCEL。</p>
+<p>如果需要循环、分支、恢复、人工确认，用 LangGraph。</p>
+<h3 id="step-7-决定记忆策略">Step 7：决定记忆策略<a class="anchor" href="#step-7-决定记忆策略" aria-label="跳转到本节">#</a></h3>
+<ul>
+<li>当前对话：messages。</li>
+<li>临时状态：Redis。</li>
+<li>长期会话：PostgreSQL。</li>
+<li>语义记忆：Mem0 或向量库。</li>
+</ul>
+<h3 id="step-8-设计-ui-流">Step 8：设计 UI 流<a class="anchor" href="#step-8-设计-ui-流" aria-label="跳转到本节">#</a></h3>
+<p>前端需要展示：</p>
+<ul>
+<li>用户消息。</li>
+<li>AI 文本流。</li>
+<li>工具调用中。</li>
+<li>工具输出。</li>
+<li>错误。</li>
+<li>中断/重试。</li>
+<li>最终结果。</li>
+</ul>
+<h3 id="step-9-加观测">Step 9：加观测<a class="anchor" href="#step-9-加观测" aria-label="跳转到本节">#</a></h3>
+<p>至少记录：</p>
+<ul>
+<li>用户输入。</li>
+<li>prompt 关键变量。</li>
+<li>检索结果。</li>
+<li>tool call。</li>
+<li>tool result。</li>
+<li>模型输出。</li>
+<li>token。</li>
+<li>耗时。</li>
+<li>错误。</li>
+</ul>
+<h3 id="step-10-加护栏">Step 10：加护栏<a class="anchor" href="#step-10-加护栏" aria-label="跳转到本节">#</a></h3>
+<p>包括：</p>
+<ul>
+<li>max steps。</li>
+<li>tool allowlist。</li>
+<li>参数校验。</li>
+<li>敏感操作确认。</li>
+<li>输出格式校验。</li>
+<li>超时。</li>
+<li>重试。</li>
+<li>失败兜底。</li>
+</ul>
+<h2 id="20-debug-checklist">20. Debug Checklist<a class="anchor" href="#20-debug-checklist" aria-label="跳转到本节">#</a></h2>
+<p>Agent 出问题时，不要只改 prompt。按链路排：</p>
+<ol>
+<li><strong>用户问题是否清楚</strong></li>
+</ol>
+<ul>
+<li>输入是否缺关键信息。</li>
+</ul>
+<ol>
+<li><strong>Prompt 是否清楚</strong></li>
+</ol>
+<ul>
+<li>角色、目标、工具规则、输出格式是否明确。</li>
+</ul>
+<ol>
+<li><strong>模型是否支持需要的能力</strong></li>
+</ol>
+<ul>
+<li>tool calling 是否稳定。</li>
+<li>structured output 是否可用。</li>
+</ul>
+<ol>
+<li><strong>工具 schema 是否清楚</strong></li>
+</ol>
+<ul>
+<li>参数是否歧义。</li>
+<li>返回是否太乱。</li>
+</ul>
+<ol>
+<li><strong>工具结果是否正确</strong></li>
+</ol>
+<ul>
+<li>API 是否失败。</li>
+<li>命令是否报错。</li>
+<li>数据库是否返回空。</li>
+</ul>
+<ol>
+<li><strong>RAG 检索是否命中</strong></li>
+</ol>
+<ul>
+<li>chunk 是否合理。</li>
+<li>query 是否需要改写。</li>
+<li>topK 是否太少或太多。</li>
+<li>是否需要关键词检索补充。</li>
+</ul>
+<ol>
+<li><strong>状态是否传错</strong></li>
+</ol>
+<ul>
+<li>LangGraph state 字段是否更新。</li>
+<li>checkpoint 是否恢复了旧状态。</li>
+</ul>
+<ol>
+<li><strong>上下文是否污染</strong></li>
+</ol>
+<ul>
+<li>history 是否太长。</li>
+<li>tool output 是否太大。</li>
+<li>无关资料是否塞进 prompt。</li>
+</ul>
+<ol>
+<li><strong>是否缺观测</strong></li>
+</ol>
+<ul>
+<li>没有 trace 就很难定位。</li>
+<li>优先接入 LangSmith 或自建日志。</li>
+</ul>
+<h2 id="21-面试-项目表达模板">21. 面试/项目表达模板<a class="anchor" href="#21-面试-项目表达模板" aria-label="跳转到本节">#</a></h2>
+<p>如果面试官问“你理解 Agent 吗”，可以这样答：</p>
+<blockquote>我理解 Agent 不是简单的一次大模型调用，而是模型在 prompt、工具、记忆和状态管理约束下，围绕目标进行多步执行的系统。最小闭环是模型根据消息决定 tool call，工具执行后把结果作为 ToolMessage 返回，模型继续判断直到完成。工程上还要解决 RAG 知识增强、LangGraph 状态编排、SSE 流式 UI、长期记忆、trace 观测和工具安全边界。</blockquote>
+<p>如果问“RAG 怎么做”，可以这样答：</p>
+<blockquote>我会先用 loader 把文档转成 Document，再用 splitter 按合适的 chunk size 和 overlap 切块，用 embedding 模型向量化后写入 Milvus。查询时先做 query 改写或直接检索，取 topK chunk 组装进 prompt。如果业务有大量关键词、标签和字段过滤，我会结合 Elasticsearch 做混合检索；如果知识关系很强，再考虑 Neo4j 做 GraphRAG。</blockquote>
+<p>如果问“LangGraph 有什么用”，可以这样答：</p>
+<blockquote>LCEL 更适合线性链路，比如 prompt -&gt; model -&gt; parser。LangGraph 适合复杂 Agent，它把流程显式建成状态图，节点之间通过 state 传递数据，可以做条件分支、循环、checkpoint、interrupt 和多 Agent 协作。比如 SQL Agent 可以拆成理解问题、检索元数据、生成 SQL、校验 SQL、执行 SQL、修正错误、总结结果这些节点。</blockquote>
+<p>如果问“怎么做一个 AI 应用的前端交互”，可以这样答：</p>
+<blockquote>Agent 不应该只等最终结果，前端最好通过 SSE 展示中间过程。服务端可以按事件推送 text-start、text-delta、tool-input、tool-output、error、done 等事件。前端把 AI 文本、工具调用卡片、执行状态、错误和最终结果分开展示，让用户知道 Agent 正在做什么，也方便中断和重试。</blockquote>
+<h2 id="22-推荐复习顺序">22. 推荐复习顺序<a class="anchor" href="#22-推荐复习顺序" aria-label="跳转到本节">#</a></h2>
+<p>如果你现在“都看过但细节乱”，建议按这个顺序重新过一遍：</p>
+<ol>
+<li><strong>Tool / mini cursor</strong></li>
+</ol>
+<ul>
+<li>目标：搞懂 tool_calls、ToolMessage、Agent Loop。</li>
+</ul>
+<ol>
+<li><strong>MCP</strong></li>
+</ol>
+<ul>
+<li>目标：搞懂 MCP Server/Client 与普通 tool 的关系。</li>
+</ul>
+<ol>
+<li><strong>RAG 基础</strong></li>
+</ol>
+<ul>
+<li>目标：背熟 loader -&gt; splitter -&gt; embedding -&gt; vector store -&gt; retriever -&gt; prompt。</li>
+</ul>
+<ol>
+<li><strong>Prompt / Output Parser / Runnable / LCEL</strong></li>
+</ol>
+<ul>
+<li>目标：知道 LangChain 怎么把模型调用组织成链。</li>
+</ul>
+<ol>
+<li><strong>NestJS + Agent 服务化</strong></li>
+</ol>
+<ul>
+<li>目标：知道 Agent 如何变成后端接口。</li>
+</ul>
+<ol>
+<li><strong>AGUI / SSE</strong></li>
+</ol>
+<ul>
+<li>目标：知道 Agent 中间过程如何展示到前端。</li>
+</ul>
+<ol>
+<li><strong>LangGraph</strong></li>
+</ol>
+<ul>
+<li>目标：掌握 state、node、edge、checkpoint、interrupt。</li>
+</ul>
+<ol>
+<li><strong>Advanced RAG</strong></li>
+</ol>
+<ul>
+<li>目标：区分 Milvus、ES、Neo4j、Agentic RAG、GraphRAG。</li>
+</ul>
+<ol>
+<li><strong>LangSmith / DeepAgents / Memory</strong></li>
+</ol>
+<ul>
+<li>目标：理解真实项目里的调试、子 Agent 和长期记忆。</li>
+</ul>
+<h2 id="23-一句话总览">23. 一句话总览<a class="anchor" href="#23-一句话总览" aria-label="跳转到本节">#</a></h2>
+<p>这套教程的主线可以压缩成一句话：</p>
+<blockquote>先让模型能调工具，再用 MCP 标准化工具，用 RAG 补知识，用 LangChain 组织调用，用 NestJS 服务化，用 SSE/AGUI 展示过程，用 LangGraph 管复杂状态，用 ES/Milvus/Neo4j/Redis/Postgres/Mem0 管知识和记忆，用 LangSmith/DeepAgents 把 Agent 做到可调试、可扩展、可落地。</blockquote></article>
+    </div>
+  </main>
+</div>
+<button class="backtop" id="backtop">回到顶部</button>
+<script>
+const links = [...document.querySelectorAll('.toc-link')];
+const headings = links.map(a => document.getElementById(decodeURIComponent(a.getAttribute('href').slice(1)))).filter(Boolean);
+const observer = new IntersectionObserver(entries => {
+  const visible = entries.filter(e => e.isIntersecting).sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top)[0];
+  if (!visible) return;
+  links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + visible.target.id));
+}, { rootMargin:'-20% 0px -70% 0px', threshold:0 });
+headings.forEach(h => observer.observe(h));
+
+document.getElementById('backtop').addEventListener('click', () => scrollTo({ top:0, behavior:'smooth' }));
+document.getElementById('printPage').addEventListener('click', () => window.print());
+document.getElementById('expandAll').addEventListener('click', () => document.querySelector('#doc').scrollIntoView({behavior:'smooth'}));
+const search = document.getElementById('search');
+const clear = document.getElementById('clearSearch');
+const doc = document.getElementById('doc');
+const original = doc.innerHTML;
+function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function runSearch() {
+  const q = search.value.trim();
+  doc.innerHTML = original;
+  [...doc.querySelectorAll('.hidden-by-search')].forEach(el => el.classList.remove('hidden-by-search'));
+  if (!q) return;
+  const re = new RegExp(escapeRegExp(q), 'gi');
+  const walker = document.createTreeWalker(doc, NodeFilter.SHOW_TEXT, { acceptNode(node) {
+    if (!node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+    if (node.parentElement.closest('script,style,pre,code')) return NodeFilter.FILTER_REJECT;
+    return re.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+  }});
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node => {
+    const span = document.createElement('span');
+    span.innerHTML = htmlEscape(node.nodeValue).replace(re, m => '<mark>' + htmlEscape(m) + '</mark>');
+    node.parentNode.replaceChild(span, node);
+  });
+  const first = doc.querySelector('mark');
+  if (first) first.scrollIntoView({ behavior:'smooth', block:'center' });
+}
+function htmlEscape(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+search.addEventListener('input', runSearch);
+clear.addEventListener('click', () => { search.value=''; doc.innerHTML = original; search.focus(); });
+</script>
+</body>
+</html>

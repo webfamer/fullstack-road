@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mini React Fiber Demo</title>
+    <style>
+      :root {
+        --bg: #f5f1e8;
+        --paper: #fffdf8;
+        --ink: #1f1b16;
+        --muted: #6d645b;
+        --line: #d9cdbf;
+        --accent: #a24d2d;
+        --accent-2: #1f5c4a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Iowan Old Style", "Palatino Linotype", serif;
+        background:
+          radial-gradient(circle at top right, rgba(162, 77, 45, 0.12), transparent 24%),
+          linear-gradient(180deg, #f7f2e9, #efe4d3);
+        color: var(--ink);
+      }
+
+      .page {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 32px 20px 56px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+      }
+
+      .hero {
+        display: grid;
+        gap: 18px;
+        margin-bottom: 28px;
+      }
+
+      .hero p {
+        margin: 0;
+        max-width: 760px;
+        line-height: 1.65;
+        color: var(--muted);
+        font-size: 18px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 20px;
+      }
+
+      .card {
+        background: color-mix(in srgb, var(--paper) 92%, white);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 20px;
+        box-shadow: 0 18px 40px rgba(72, 51, 33, 0.08);
+      }
+
+      .demo-app {
+        display: grid;
+        gap: 14px;
+      }
+
+      .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 16px;
+        font: inherit;
+        cursor: pointer;
+        background: var(--accent);
+        color: white;
+      }
+
+      button.secondary {
+        background: var(--accent-2);
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+
+      code,
+      pre {
+        font-family: "SFMono-Regular", Consolas, monospace;
+      }
+
+      .explain-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .explain-list div {
+        border-left: 3px solid var(--accent);
+        padding-left: 12px;
+      }
+
+      .log {
+        min-height: 240px;
+        max-height: 420px;
+        overflow: auto;
+        padding: 14px;
+        background: #201a16;
+        color: #f6ecdf;
+        border-radius: 14px;
+        line-height: 1.5;
+        font-size: 13px;
+        white-space: pre-wrap;
+      }
+
+      .legend {
+        display: grid;
+        gap: 10px;
+        margin-top: 16px;
+        color: var(--muted);
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        border: 1px solid var(--line);
+        color: var(--accent);
+        background: rgba(162, 77, 45, 0.08);
+      }
+
+      @media (max-width: 860px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <section class="hero">
+        <span class="pill">Mini React / Fiber / 双树</span>
+        <h1>最小 React 实现：把面试里那套流程讲顺</h1>
+        <p>
+          这个 demo 保留 React 最关键的几件事：虚拟 DOM 描述 UI、Fiber 把递归改成可中断链表遍历、current/workInProgress
+          双树对比、reconcile 产出 effect、commit 一次性改真实 DOM。
+        </p>
+      </section>
+
+      <section class="layout">
+        <div class="card">
+          <div id="root"></div>
+        </div>
+
+        <div class="card">
+          <h2>运行日志</h2>
+          <p class="legend">
+            每次点击按钮都会看到：创建新虚拟树 -> 调度 workLoop -> 生成 workInProgress Fiber 树 ->
+            reconcile 打标记 -> commit 提交到 DOM。
+          </p>
+          <pre id="log" class="log"></pre>
+        </div>
+      </section>
+
+      <section class="card" style="margin-top: 20px">
+        <h2>面试时建议这样讲</h2>
+        <div class="explain-list">
+          <div>
+            <strong>1. 虚拟 DOM：</strong>
+            它不是为了“更快”，核心是先把 UI 变成 JS 对象树，后面才能做 diff、调度、跨平台。
+          </div>
+          <div>
+            <strong>2. Fiber：</strong>
+            React 以前是递归同步更新，一旦开始很难停。Fiber 把每个节点变成一个工作单元，可以拆片执行。
+          </div>
+          <div>
+            <strong>3. 双树：</strong>
+            current 树代表当前屏幕，workInProgress 树代表正在计算的新结果，两棵树通过
+            <code>alternate</code> 互相指向。
+          </div>
+          <div>
+            <strong>4. render 阶段：</strong>
+            只算，不改 DOM。主要做 reconcile，决定节点是新增、更新还是删除。
+          </div>
+          <div>
+            <strong>5. commit 阶段：</strong>
+            不能中断，把 effect 一次性提交到真实 DOM，保证界面一致性。
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

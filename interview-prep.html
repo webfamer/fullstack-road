@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<!--
+  Interview-prep template. The prep-interview skill replaces these placeholders:
+    __TITLE__            -> page title string
+    __META__             -> JSON: { role, candidate, language, generated, coverage:{jd:[],cv:[]} }
+    __PROMPT_TEMPLATE__  -> JSON string of the copy prompt; contains {{QUESTION}} and {{FOLLOWUPS}}
+    __DATA__             -> JSON array: [ { category, questions:[ {q, level, source, followups:[]} ] } ]
+    __UI__               -> JSON labels: { progress, of, processed, copy_hint, copied, undo,
+                                           filter_category, filter_level, all, hide_processed,
+                                           why, followups, reset, foundational, core, advanced,
+                                           filter_jd, filter_cv, footer }
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>面试准备 - 前端开发工程师 - 西湖机器人</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --panel:#ffffff; --panel2:#f0f2f5; --line:#e3e6ec; --line2:#eef0f4;
+    --txt:#1f2430; --muted:#6b7280; --soft:#8a91a0; --accent:#3b6cf6; --accent-weak:#e8efff;
+    --good:#16a34a; --good-weak:#e7f6ec;
+    --found:#16a34a; --core:#c2860a; --adv:#dc2626;
+    --tree:#d4d9e2;
+    --shadow:0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Inter","Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--txt);
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  }
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:920px;margin:0 auto;padding:36px 22px 96px}
+
+  header h1{font-size:24px;line-height:1.3;margin:0 0 8px;letter-spacing:-.01em;font-weight:700}
+  .sub{color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+  .sub b{color:var(--txt);font-weight:600}
+  .sub .dot{width:3px;height:3px;border-radius:50%;background:var(--soft);display:inline-block}
+
+  .coverage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:22px 0 6px;box-shadow:var(--shadow)}
+  .cov-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:640px){.cov-cols{grid-template-columns:1fr}}
+  .coverage h3{margin:0 0 10px;font-size:11px;color:var(--soft);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px 11px;font-size:12px;color:var(--muted)}
+
+  .bar{position:sticky;top:0;z-index:5;background:linear-gradient(var(--bg),var(--bg) 78%,rgba(247,248,250,0));padding:14px 0 14px;margin-bottom:2px}
+  .progwrap{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+  .progtrack{flex:1;height:7px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .progfill{height:100%;width:0;background:var(--good);transition:width .3s ease}
+  .progtxt{font-size:13px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  select,button{font:inherit;font-size:13px;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:7px 11px;transition:border-color .15s,background .15s}
+  select:hover,button:hover{border-color:var(--accent)}
+  select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M3 4.5L6 7.5L9 4.5' stroke='%236b7280' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");background-repeat:no-repeat;background-position:right 9px center;padding-right:28px}
+  button{cursor:pointer}
+  label.toggle{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:13px;cursor:pointer;user-select:none}
+  label.toggle input{accent-color:var(--accent)}
+
+  /* section heading (category) */
+  .cat{display:flex;align-items:baseline;gap:10px;margin:30px 0 4px;padding-bottom:2px}
+  .cat .cat-name{font-size:13px;color:var(--soft);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+  .cat .cat-count{font-size:12px;color:var(--soft);font-variant-numeric:tabular-nums}
+
+  /* tree */
+  .tree{position:relative;margin-left:6px}
+  .node{position:relative;padding-left:26px}
+  .node::before{content:"";position:absolute;left:0;top:0;bottom:0;width:1.5px;background:var(--tree)}
+  .node:last-child::before{bottom:auto;height:22px}
+  .node::after{content:"";position:absolute;left:0;top:21px;width:18px;height:1.5px;background:var(--tree)}
+
+  .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin:9px 0;cursor:pointer;box-shadow:var(--shadow);transition:border-color .15s,box-shadow .15s,opacity .15s,transform .05s}
+  .card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(59,108,246,.10)}
+  .card:active{transform:translateY(.5px)}
+
+  .q-row{display:flex;gap:9px;align-items:flex-start}
+  .node-dot{flex:none;width:9px;height:9px;border-radius:50%;margin-top:6px;background:var(--accent);box-shadow:0 0 0 3px var(--accent-weak)}
+  .q-text{font-weight:600;flex:1;letter-spacing:-.005em}
+  .lvl{flex:none;font-size:10.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-top:1px}
+  .lvl.Foundational{color:var(--found);border-color:#bfe6c9;background:var(--good-weak)}
+  .lvl.Core{color:var(--core);border-color:#f0dcae;background:#fbf3e0}
+  .lvl.Advanced{color:var(--adv);border-color:#f3c2c2;background:#fdeaea}
+
+  .src{color:var(--muted);font-size:12.5px;margin:7px 0 0;padding-left:18px}
+  .src b{color:var(--txt);font-weight:600}
+
+  /* follow-up sub-tree */
+  .fu{margin:9px 0 1px;padding-left:18px}
+  .fu-label{font-size:11px;color:var(--soft);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:3px}
+  .fu-tree{position:relative;margin-left:3px}
+  .fu-item{position:relative;padding:3px 0 3px 20px;font-size:13.5px;color:var(--muted);line-height:1.5}
+  .fu-item::before{content:"";position:absolute;left:0;top:0;bottom:0;width:1.5px;background:var(--line)}
+  .fu-item:last-child::before{bottom:auto;height:15px}
+  .fu-item::after{content:"";position:absolute;left:0;top:14px;width:13px;height:1.5px;background:var(--line)}
+
+  .hint{font-size:12px;color:var(--accent);margin-top:9px;padding-left:18px;opacity:0;transition:opacity .15s}
+  .card:hover .hint{opacity:.9}
+
+  .card.done{opacity:.62;border-style:dashed;background:var(--good-weak)}
+  .card.done .node-dot{background:var(--good);box-shadow:0 0 0 3px var(--good-weak)}
+  .card.done .q-text::before{content:"✓ ";color:var(--good);font-weight:700}
+  .card.done .hint{opacity:0}
+  .undo{margin-left:auto;flex:none;font-size:12px;background:transparent;border:none;color:var(--muted);text-decoration:underline;padding:0;cursor:pointer;display:none}
+  .card.done .undo{display:inline}
+
+  .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--txt);color:#fff;font-weight:600;font-size:13px;padding:10px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:.25s;box-shadow:0 6px 20px rgba(16,24,40,.18)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .hidden{display:none!important}
+  footer{margin-top:38px;color:var(--soft);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="title"></h1>
+    <div class="sub" id="meta"></div>
+  </header>
+
+  <section class="coverage" id="coverage">
+    <div class="cov-cols">
+      <div><h3 id="lbl-jd">JD requirements</h3><div class="chips" id="cov-jd"></div></div>
+      <div><h3 id="lbl-cv">Resume areas</h3><div class="chips" id="cov-cv"></div></div>
+    </div>
+  </section>
+
+  <div class="bar">
+    <div class="progwrap">
+      <div class="progtrack"><div class="progfill" id="progfill"></div></div>
+      <div class="progtxt" id="progtxt"></div>
+    </div>
+    <div class="controls">
+      <select id="f-cat"></select>
+      <select id="f-lvl"></select>
+      <label class="toggle"><input type="checkbox" id="f-hide"> <span id="lbl-hide"></span></label>
+      <button id="reset"></button>
+    </div>
+  </div>
+
+  <div id="list"></div>
+  <footer id="foot"></footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const META = {
+  "role": "前端开发工程师（数据采集平台 / 可视化 / 实时接入）",
+  "candidate": "项思哲",
+  "language": "中文",
+  "generated": "2026-06-16",
+  "coverage": {
+    "jd": [
+      "数据采集平台前端页面与交互开发",
+      "React / Vue 框架能力与组件化开发",
+      "Tailwind CSS 与样式组件实践",
+      "HTTP(S)、浏览器缓存、RESTful API 与 Axios 封装",
+      "鉴权机制与前后端权限配合",
+      "后台管理系统、可视化、ECharts / WebGL 经验",
+      "实时视频 / 音频接入与流媒体基础",
+      "模块设计、联调、性能优化与浏览器兼容",
+      "组件库建设与通用功能抽象"
+    ],
+    "cv": [
+      "BI 智能问数 Agent：LangChain / LangGraph / RAG / SQL Agent / SSE",
+      "BI 报表分析平台：React / TypeScript / Monorepo / Recoil / Storybook / VTable",
+      "电力设备监测云平台：React / Umi / NestJS / MySQL / Redis / TCP / 告警 / JWT / RBAC",
+      "智慧靶场驾驶舱：ECharts / WebSocket / Unity WebGL / RTSP 转码推流",
+      "工程化与组件体系：Webpack / Storybook / npm 包复用 / 异步加载 / CDN 化",
+      "部署与排障：Docker / Nginx / 日志排查 / 慢 SQL 优化"
+    ]
+  }
+};
+const DATA = [
+  {
+    "category": "JD 通用能力：前端基础与框架",
+    "questions": [
+      {
+        "q": "你在 React 或 Vue 中如何拆分一个数据采集平台的页面模块？组件边界、状态边界和接口边界怎么定？",
+        "level": "Core",
+        "source": "JD: 数据采集平台前端页面与交互开发 → 模块设计能力",
+        "followups": [
+          "哪些状态应该放组件内部，哪些应该提升到全局？",
+          "表单配置、采集任务列表、实时状态展示会怎么拆？",
+          "如何避免页面后期变成一个大组件？"
+        ]
+      },
+      {
+        "q": "React 和 Vue 你都用过的话，能说说它们响应式机制和渲染更新思路的差异吗？",
+        "level": "Core",
+        "source": "JD: 至少精通 React/Vue 中一种框架 → 框架原理理解",
+        "followups": [
+          "React 为什么强调 immutable update？",
+          "Vue 的依赖收集大概发生在哪里？",
+          "什么场景下你会优先选择 React？"
+        ]
+      },
+      {
+        "q": "TypeScript 在中后台或数据采集平台里你一般怎么落地？哪些地方必须有类型约束？",
+        "level": "Core",
+        "source": "JD: 前端工程开发隐含 TypeScript 能力 → 类型建模与接口约束",
+        "followups": [
+          "接口返回类型是手写还是生成？",
+          "复杂表单配置怎么定义类型？",
+          "any 用多了会带来什么问题？"
+        ]
+      },
+      {
+        "q": "你了解 Tailwind CSS 这类原子化 CSS 吗？它和传统 CSS Modules / Less / styled-components 的取舍是什么？",
+        "level": "Foundational",
+        "source": "JD: 熟悉 tailwindcss 样式组件 → 样式方案选择",
+        "followups": [
+          "Tailwind 怎么保证团队样式一致性？",
+          "类名很长会不会影响可维护性？",
+          "组件库项目里你会怎么组织样式？"
+        ]
+      },
+      {
+        "q": "组件库建设时，你会如何抽象通用组件，避免组件过度封装或难以复用？",
+        "level": "Advanced",
+        "source": "JD: 参与组件库建设与通用功能抽象 → 组件设计能力",
+        "followups": [
+          "通用组件和业务组件的边界是什么？",
+          "如何设计 props，避免后续破坏兼容？",
+          "Storybook 在组件库里解决什么问题？"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "JD 通用能力：接口、鉴权与浏览器机制",
+    "questions": [
+      {
+        "q": "RESTful API 设计和前端 Axios 封装你怎么理解？一个项目里请求层通常会封装哪些能力？",
+        "level": "Core",
+        "source": "JD: RESTful API / Axios 组件 / 接口联调 → 请求层工程化",
+        "followups": [
+          "错误码、token 过期、重复请求怎么处理？",
+          "如何做请求取消和防抖？",
+          "接口类型和 mock 数据怎么维护？"
+        ]
+      },
+      {
+        "q": "浏览器缓存有哪些类型？你在前端项目里怎么利用缓存提升加载速度，又怎么避免缓存导致资源不更新？",
+        "level": "Core",
+        "source": "JD: 了解浏览器缓存 → HTTP 缓存与资源发布",
+        "followups": [
+          "强缓存和协商缓存的区别是什么？",
+          "HTML、JS、图片资源缓存策略有什么不同？",
+          "CDN 化后如何处理版本更新？"
+        ]
+      },
+      {
+        "q": "常见前后端鉴权方案有哪些？JWT、Session、RBAC 在后台系统里分别解决什么问题？",
+        "level": "Core",
+        "source": "JD: 常见鉴权机制 → 登录态与权限控制",
+        "followups": [
+          "JWT 泄露后怎么处理？",
+          "前端按钮权限和后端接口权限是什么关系？",
+          "菜单权限和接口权限表怎么设计？"
+        ]
+      },
+      {
+        "q": "HTTPS 相比 HTTP 解决了什么问题？前端开发中你真正需要关注 HTTPS 的哪些细节？",
+        "level": "Foundational",
+        "source": "JD: HTTP(S) 协议 → Web 安全基础",
+        "followups": [
+          "TLS 握手大概做了什么？",
+          "混合内容为什么会被浏览器拦截？",
+          "Cookie 的 Secure、SameSite 和 HttpOnly 分别是什么？"
+        ]
+      },
+      {
+        "q": "接口联调时，如果后端说接口没问题、前端说数据不对，你会怎么定位？",
+        "level": "Core",
+        "source": "JD: 与后端协作完成数据上报、采集配置落地 → 联调与排障",
+        "followups": [
+          "你会先看 Network 的哪些信息？",
+          "如何判断是字段口径、接口契约还是渲染逻辑问题？",
+          "怎样减少联调扯皮？"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "JD 通用能力：可视化、实时接入与性能",
+    "questions": [
+      {
+        "q": "如果一个页面要实时展示采集数据，你会如何设计前端的数据流和渲染策略？",
+        "level": "Advanced",
+        "source": "JD: 数据采集平台 + 响应速度优化 → 实时数据渲染",
+        "followups": [
+          "WebSocket 高频推送时为什么不能每条都 setState？",
+          "如何做缓冲、合并和降采样？",
+          "图表和表格的更新策略有什么不同？"
+        ]
+      },
+      {
+        "q": "ECharts 图表在大数据量或高频更新场景下怎么优化？",
+        "level": "Core",
+        "source": "JD: 可视化开发经验 / ECharts 优先 → 图表性能",
+        "followups": [
+          "setOption 的 notMerge、replaceMerge 怎么理解？",
+          "什么时候做采样、分页或服务端聚合？",
+          "如何避免图表 resize 和重绘过于频繁？"
+        ]
+      },
+      {
+        "q": "WebGL 在前端可视化里主要解决什么问题？你如何向面试官解释 WebGL 和普通 Canvas/SVG 的区别？",
+        "level": "Core",
+        "source": "JD: WebGL 经验优先 → 图形渲染基础",
+        "followups": [
+          "WebGL 适合哪些场景？",
+          "Unity WebGL 嵌入页面时要注意什么？",
+          "3D 场景和 React 状态如何解耦？"
+        ]
+      },
+      {
+        "q": "实时视频接入在前端通常有哪些方案？RTSP、HLS、FLV、WebRTC、MPEG-TS 大概怎么选？",
+        "level": "Advanced",
+        "source": "JD: 实时视频/音频接入经验优先 → 流媒体方案认知",
+        "followups": [
+          "浏览器为什么不能直接播放 RTSP？",
+          "低延迟场景会优先考虑什么方案？",
+          "视频白屏或卡顿你会从哪些层排查？"
+        ]
+      },
+      {
+        "q": "你做前端性能优化时，通常从加载性能、运行时性能和稳定性三个角度怎么拆？",
+        "level": "Core",
+        "source": "JD: 持续优化前端体验与响应速度 → 性能优化方法论",
+        "followups": [
+          "首屏慢和交互卡顿分别怎么定位？",
+          "异步加载、骨架屏、CDN 化各自解决什么问题？",
+          "长时间运行页面如何观察内存泄漏？"
+        ]
+      },
+      {
+        "q": "多浏览器兼容问题你怎么处理？你遇到过哪些比较典型的兼容坑？",
+        "level": "Foundational",
+        "source": "JD: 保障多浏览器兼容性 → 兼容性处理",
+        "followups": [
+          "CSS、JS API、媒体播放兼容分别怎么查？",
+          "Babel、PostCSS、polyfill 分别解决什么？",
+          "如何建立兼容性测试清单？"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "简历深挖：BI 与 AI 应用项目",
+    "questions": [
+      {
+        "q": "你简历里 BI 智能问数 Agent 是怎么从中文问题生成 SQL 的？整个链路怎么拆节点？",
+        "level": "Advanced",
+        "source": "CV: BI 智能问数 Agent → LangChain / LangGraph / SQL Agent",
+        "followups": [
+          "关键词扩充、字段理解、SQL 生成分别解决什么？",
+          "LangGraph 的 State 里会放哪些信息？",
+          "SQL 生成错了你怎么兜底？"
+        ]
+      },
+      {
+        "q": "你在问数 Agent 里为什么用 RAG？元数据知识库里放了哪些内容，怎么检索？",
+        "level": "Advanced",
+        "source": "CV: 元数据知识库 → MySQL / Qdrant / Elasticsearch / RAG",
+        "followups": [
+          "字段别名和指标口径怎么组织？",
+          "向量检索和关键词检索如何配合？",
+          "检索结果太多或不准怎么处理？"
+        ]
+      },
+      {
+        "q": "FastAPI + SSE 的问数接口你是怎么设计的？前端如何展示中间状态和最终图表？",
+        "level": "Core",
+        "source": "CV: FastAPI + SSE 问数接口 → 流式输出与前端交互",
+        "followups": [
+          "SSE 和 WebSocket 的区别是什么？",
+          "中途失败、断线重连怎么处理？",
+          "前端如何避免流式消息导致频繁渲染？"
+        ]
+      },
+      {
+        "q": "BI 报表分析平台里，拖拽生成报表和字段配置的核心数据模型你怎么理解？",
+        "level": "Core",
+        "source": "CV: BI 报表分析平台 → 字段配置、报表查看、仪表盘",
+        "followups": [
+          "维度、指标、筛选条件、排序如何组织？",
+          "前端 schema 和后端查询参数如何映射？",
+          "导出分享链路要注意哪些权限和性能问题？"
+        ]
+      },
+      {
+        "q": "你用 VTable 做复杂表格能力时，适配器模式具体适配了什么？",
+        "level": "Advanced",
+        "source": "CV: VTable 适配器模式 → 字段类型渲染、列宽、冻结列、下钻",
+        "followups": [
+          "为什么不直接在业务组件里写渲染逻辑？",
+          "字段类型渲染如何扩展？",
+          "下钻和排序过滤如何与表格状态同步？"
+        ]
+      },
+      {
+        "q": "你用 Storybook 建图表组件库时，管道模式是什么？组件库如何支持多个项目复用？",
+        "level": "Core",
+        "source": "CV: Storybook 图表组件库 / npm 包复用 → 组件体系建设",
+        "followups": [
+          "图表组件入参怎么设计？",
+          "如何做主题、空态、异常态和 loading 态？",
+          "npm 包版本升级如何避免影响老项目？"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "简历深挖：设备监测、接口与数据库",
+    "questions": [
+      {
+        "q": "电力设备监测云平台里，TCP 报文接入与解析链路你是怎么设计的？",
+        "level": "Advanced",
+        "source": "CV: 电力设备监测云平台 → TCP 报文接入、拆包/粘包、落库",
+        "followups": [
+          "拆包/粘包怎么判断一条完整报文？",
+          "原始报文和解析结果为什么都要保存？",
+          "如果设备量从 400 台增长到 4000 台你怎么扩展？"
+        ]
+      },
+      {
+        "q": "你把关键接口从十几秒优化到约 2 秒，慢 SQL 当时是怎么定位和优化的？",
+        "level": "Advanced",
+        "source": "CV: 慢 SQL 优化结果 → MySQL 排查与索引设计",
+        "followups": [
+          "你看 explain 时重点看哪些字段？",
+          "索引是不是越多越好？",
+          "分页、统计、时间范围查询分别怎么优化？"
+        ]
+      },
+      {
+        "q": "告警规则、告警记录和设备表之间你会怎么设计表关系？频繁告警怎么收敛？",
+        "level": "Advanced",
+        "source": "CV: 告警规则 / 告警记录 / 设备管理 → 表设计与告警治理",
+        "followups": [
+          "告警去重 key 怎么设计？",
+          "告警恢复和确认状态怎么建模？",
+          "通知限流和升级策略放在哪一层？"
+        ]
+      },
+      {
+        "q": "你在 NestJS 项目里 JWT + RBAC + 菜单权限是怎么落地的？",
+        "level": "Core",
+        "source": "CV: NestJS / JWT / RBAC / 菜单权限 → 鉴权授权实现",
+        "followups": [
+          "Guard、Middleware、Interceptor 分别适合做什么？",
+          "角色、菜单、按钮、接口权限如何关联？",
+          "前端路由权限和后端接口权限如何保持一致？"
+        ]
+      },
+      {
+        "q": "设备监测平台里 Redis 可以用在哪些地方？缓存一致性和过期策略怎么考虑？",
+        "level": "Core",
+        "source": "CV: Redis 使用经验 → 缓存与高并发读写",
+        "followups": [
+          "设备最新状态适合缓存吗？",
+          "缓存穿透、击穿、雪崩分别怎么处理？",
+          "哪些数据不适合放缓存？"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "简历深挖：实时可视化、视频与工程化",
+    "questions": [
+      {
+        "q": "智慧靶场驾驶舱里 WebSocket 高频训练数据你是怎么处理的？前端如何保证大屏不卡？",
+        "level": "Advanced",
+        "source": "CV: 智慧靶场驾驶舱 → WebSocket 高频数据与 ECharts/Unity WebGL",
+        "followups": [
+          "如何做消息缓冲和批量渲染？",
+          "轨迹数据和图表数据更新策略有什么不同？",
+          "断线重连和补偿数据怎么处理？"
+        ]
+      },
+      {
+        "q": "你用 Node.js 做 RTSP 到 MPEG 的转码与推流服务，这个链路大概是怎么工作的？",
+        "level": "Advanced",
+        "source": "CV: Node.js RTSP 转码推流 → 实时视频接入经验",
+        "followups": [
+          "为什么需要转码而不是浏览器直接播 RTSP？",
+          "视频白屏你会查哪些环节？",
+          "如果多路视频同时接入，服务端压力怎么控制？"
+        ]
+      },
+      {
+        "q": "Unity WebGL 嵌入 React 页面时，你如何处理生命周期、通信和资源占用问题？",
+        "level": "Core",
+        "source": "CV: Unity WebGL → 3D 场景集成与长时间运行稳定性",
+        "followups": [
+          "React 状态变化会不会影响 Unity 实例？",
+          "页面卸载时要释放哪些资源？",
+          "如何定位 WebGL 内存占用问题？"
+        ]
+      },
+      {
+        "q": "你做过图片 CDN 化、骨架屏、组件异步加载和多区域部署改造，这些分别解决什么性能问题？",
+        "level": "Core",
+        "source": "CV: 报表页面加载体验优化 → 首屏与资源优化",
+        "followups": [
+          "首屏优化和运行时优化怎么区分？",
+          "异步加载会带来哪些用户体验问题？",
+          "多区域部署对静态资源路径和缓存有什么影响？"
+        ]
+      },
+      {
+        "q": "Monorepo、Webpack、Storybook 在你的项目里分别承担什么角色？如果让你重新搭一套前端工程结构会怎么做？",
+        "level": "Advanced",
+        "source": "CV: Monorepo / Webpack / Storybook → 工程化与项目结构设计",
+        "followups": [
+          "Monorepo 适合什么团队规模？",
+          "Webpack 构建慢怎么优化？",
+          "组件库、业务应用、工具包如何分层？"
+        ]
+      }
+    ]
+  }
+];
+const UI = {
+  "progress": "进度",
+  "of": "/",
+  "processed": "已练习",
+  "copy_hint": "点击复制深挖提示词，并标记为已练习",
+  "copied": "已复制深挖提示词",
+  "undo": "撤销",
+  "filter_category": "全部分类",
+  "filter_level": "全部难度",
+  "all": "全部",
+  "hide_processed": "隐藏已练习",
+  "why": "覆盖点",
+  "followups": "可能追问",
+  "reset": "重置进度",
+  "foundational": "基础",
+  "core": "核心",
+  "advanced": "进阶",
+  "filter_jd": "JD 覆盖点",
+  "filter_cv": "简历覆盖点",
+  "footer": "点击任意题卡会复制一段可直接发给 AI 的深挖提示词，并在本机浏览器中保存练习进度。"
+};
+const PROMPT_TEMPLATE = "你是一名资深前端/全栈面试官，请围绕下面这道面试题做详细拆解，帮助我准备真实面试回答。\n\n面试题：{{QUESTION}}\n\n面试官可能追问：\n{{FOLLOWUPS}}\n\n请按以下结构回答：\n1. 最佳回答：给出一段可以直接口述的结构化答案，结合 React/Vue、数据采集平台、BI 报表、可视化、Node/Nest、WebSocket、实时视频或数据库经验时要自然贴合，不要空泛。\n2. 答题框架：拆成背景、方案、关键细节、权衡、结果五部分，告诉我每部分该说什么。\n3. 加分点：说明哪些说法会体现工程经验、性能意识、稳定性意识和中高级候选人的判断力。\n4. 追问应对：逐条回答上面的追问，并指出容易踩坑的回答。\n5. ASCII 图：如果有助于理解，请用 ASCII 图画出架构、数据流、渲染链路、鉴权链路或状态流转。\n6. 项目迁移话术：如果这个题能和我的简历项目关联，请给出一段能自然引到我项目经历的说法。";
+
+const KEY = "interviewprep:" + (META.role||"") + ":" + (META.candidate||"") + ":" + (META.generated||"");
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e){ state = {}; }
+const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} };
+
+// stable id per question
+const qid = (ci, qi) => "c" + ci + "q" + qi;
+
+// ---- header / meta ----
+document.title = document.getElementById("title").textContent = "面试准备 - 前端开发工程师 - 西湖机器人";
+const meta = document.getElementById("meta");
+const bits = [];
+if (META.role) bits.push(`<span><b>${esc(META.role)}</b></span>`);
+if (META.candidate) bits.push(`<span class="dot"></span><span>${esc(META.candidate)}</span>`);
+if (META.language) bits.push(`<span class="dot"></span><span>${esc(META.language)}</span>`);
+if (META.generated) bits.push(`<span class="dot"></span><span>${esc(META.generated)}</span>`);
+meta.innerHTML = bits.join("");
+
+// ---- coverage ----
+const cov = (META.coverage)||{jd:[],cv:[]};
+document.getElementById("cov-jd").innerHTML = (cov.jd||[]).map(t=>`<span class="chip">${esc(t)}</span>`).join("") || "—";
+document.getElementById("cov-cv").innerHTML = (cov.cv||[]).map(t=>`<span class="chip">${esc(t)}</span>`).join("") || "—";
+
+// ---- UI labels ----
+document.getElementById("lbl-jd").textContent = UI.filter_jd || "JD requirements";
+document.getElementById("lbl-cv").textContent = UI.filter_cv || "Resume areas";
+document.getElementById("lbl-hide").textContent = UI.hide_processed || "Hide processed";
+document.getElementById("reset").textContent = UI.reset || "Reset progress";
+
+// ---- filters ----
+const fCat = document.getElementById("f-cat");
+const fLvl = document.getElementById("f-lvl");
+fCat.innerHTML = `<option value="">${esc(UI.filter_category||"All categories")}</option>` +
+  DATA.map(c=>`<option value="${esc(c.category)}">${esc(c.category)}</option>`).join("");
+const levels = ["Foundational","Core","Advanced"];
+const lvlLabel = l => ({Foundational:UI.foundational, Core:UI.core, Advanced:UI.advanced}[l] || l);
+fLvl.innerHTML = `<option value="">${esc(UI.filter_level||"All levels")}</option>` +
+  levels.map(l=>`<option value="${l}">${esc(lvlLabel(l))}</option>`).join("");
+
+// ---- render ----
+const list = document.getElementById("list");
+function render(){
+  list.innerHTML = "";
+  const cf = fCat.value, lf = fLvl.value, hide = document.getElementById("f-hide").checked;
+  DATA.forEach((cat, ci) => {
+    if (cf && cat.category !== cf) return;
+    const visibleQs = cat.questions.map((q,qi)=>({q,qi})).filter(({q,qi})=>{
+      if (lf && q.level !== lf) return false;
+      if (hide && state[qid(ci,qi)]) return false;
+      return true;
+    });
+    if (!visibleQs.length) return;
+
+    const h = document.createElement("div"); h.className="cat";
+    h.innerHTML = `<span class="cat-name">${esc(cat.category)}</span><span class="cat-count">${visibleQs.length}</span>`;
+    list.appendChild(h);
+
+    const tree = document.createElement("div"); tree.className="tree";
+    visibleQs.forEach(({q,qi})=>{
+      const id = qid(ci,qi);
+      const done = !!state[id];
+      const node = document.createElement("div"); node.className="node";
+      const card = document.createElement("div");
+      card.className = "card" + (done?" done":"");
+      const fu = (q.followups||[]).map(f=>`<div class="fu-item">${esc(f)}</div>`).join("");
+      card.innerHTML =
+        `<div class="q-row">`+
+          `<span class="node-dot"></span>`+
+          `<span class="q-text">${esc(q.q)}</span>`+
+          `<span class="lvl ${q.level}">${esc(lvlLabel(q.level))}</span>`+
+          `<button class="undo" data-id="${id}">${esc(UI.undo||"undo")}</button>`+
+        `</div>`+
+        (q.source?`<div class="src"><b>${esc(UI.why||"Why")}:</b> ${esc(q.source)}</div>`:``)+
+        (fu?`<div class="fu"><div class="fu-label">${esc(UI.followups||"Likely follow-ups")}</div><div class="fu-tree">${fu}</div></div>`:``)+
+        `<div class="hint">${esc(UI.copy_hint||"Click to copy a deep-dive prompt + mark as processed")}</div>`;
+      card.addEventListener("click", (e)=>{
+        if (e.target.classList.contains("undo")){
+          e.stopPropagation(); delete state[id]; save(); render(); updateProgress(); return;
+        }
+        copyPrompt(q);
+        if (!state[id]){ state[id]=true; save(); }
+        render(); updateProgress();
+      });
+      node.appendChild(card);
+      tree.appendChild(node);
+    });
+    list.appendChild(tree);
+  });
+}
+
+function buildPrompt(q){
+  const fu = (q.followups||[]).map((f,i)=>`${i+1}. ${f}`).join("\n");
+  return PROMPT_TEMPLATE.replace(/\{\{QUESTION\}\}/g, q.q).replace(/\{\{FOLLOWUPS\}\}/g, fu || "—");
+}
+function copyPrompt(q){
+  const text = buildPrompt(q);
+  const done = ()=>toast(UI.copied||"Copied to clipboard");
+  if (navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+  } else { fallbackCopy(text, done); }
+}
+function fallbackCopy(text, cb){
+  const ta=document.createElement("textarea"); ta.value=text;
+  ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try{ document.execCommand("copy"); cb&&cb(); }catch(e){ alert(text); }
+  document.body.removeChild(ta);
+}
+
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),1400);
+}
+
+function updateProgress(){
+  let total=0, done=0;
+  DATA.forEach((c,ci)=>c.questions.forEach((q,qi)=>{ total++; if(state[qid(ci,qi)]) done++; }));
+  document.getElementById("progfill").style.width = total? (100*done/total)+"%" : "0";
+  const tpl = UI.progress || "{done} of {total} processed";
+  document.getElementById("progtxt").textContent = tpl.replace("{done}",done).replace("{total}",total);
+}
+
+document.getElementById("reset").addEventListener("click", ()=>{
+  state={}; save(); render(); updateProgress();
+});
+fCat.addEventListener("change", render);
+fLvl.addEventListener("change", render);
+document.getElementById("f-hide").addEventListener("change", render);
+
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+document.getElementById("foot").textContent = (UI.footer||"Generated study sheet — progress saved locally in your browser.");
+render(); updateProgress();
+</script>
+</body>
+</html>

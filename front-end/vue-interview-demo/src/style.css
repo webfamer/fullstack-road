@@ -1,0 +1,283 @@
+:root {
+  color: #1e293b;
+  background: #f4f1e8;
+  font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: 1px solid #1e293b;
+  border-radius: 6px;
+  padding: 9px 13px;
+  color: #f8fafc;
+  background: #1e293b;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0f172a;
+}
+
+button.ghost {
+  color: #1e293b;
+  background: transparent;
+}
+
+input,
+textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: #0f172a;
+  background: #fff;
+}
+
+pre {
+  overflow: auto;
+  border: 1px solid #d7d0bd;
+  border-radius: 6px;
+  padding: 12px;
+  color: #203047;
+  background: #fbf7ed;
+  white-space: pre-wrap;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  border-right: 1px solid #d8cfbc;
+  padding: 28px 18px;
+  background: #ebe2d0;
+}
+
+.brand h1,
+.stage-header h2 {
+  margin: 6px 0 10px;
+  line-height: 1.05;
+}
+
+.brand h1 {
+  font-size: 32px;
+}
+
+.brand p {
+  margin: 0 0 22px;
+  color: #526173;
+  line-height: 1.65;
+}
+
+.eyebrow {
+  color: #9a4b2f;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.nav-list {
+  display: grid;
+  gap: 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  border-color: transparent;
+  color: #233042;
+  background: rgba(255, 255, 255, 0.48);
+  text-align: left;
+}
+
+.nav-item small {
+  color: #7c5c40;
+}
+
+.nav-item.active {
+  color: #f8fafc;
+  background: #9a4b2f;
+}
+
+.nav-item.active small {
+  color: #ffe7c3;
+}
+
+.stage {
+  padding: 32px;
+}
+
+.stage-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.stage-header h2 {
+  font-size: 34px;
+}
+
+.pill {
+  border: 1px solid #c9b99f;
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: #764125;
+  background: #fff8ec;
+  white-space: nowrap;
+}
+
+.demo-card {
+  border: 1px solid #d8cfbc;
+  border-radius: 8px;
+  padding: 24px;
+  background: #fffdf7;
+  box-shadow: 0 20px 60px rgba(73, 55, 33, 0.08);
+}
+
+.demo-card h3 {
+  margin: 4px 0 8px;
+  font-size: 24px;
+}
+
+.demo-card header p {
+  max-width: 900px;
+  color: #526173;
+  line-height: 1.75;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mini-panel,
+.log-panel {
+  border: 1px solid #e5dcc9;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fffaf0;
+}
+
+.mini-panel h4 {
+  margin: 0 0 10px;
+}
+
+.button-row,
+.menu-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.metric,
+.notice {
+  display: block;
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: #e9f5ee;
+}
+
+.ok {
+  color: #166534;
+}
+
+.danger {
+  color: #b42318;
+}
+
+.log-panel ol {
+  margin: 10px 0 0;
+  padding-left: 22px;
+  color: #475569;
+  line-height: 1.65;
+}
+
+.form-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.checkline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkline input {
+  width: auto;
+}
+
+.bars {
+  display: flex;
+  align-items: end;
+  gap: 4px;
+  height: 160px;
+  border: 1px solid #e1d4be;
+  border-radius: 8px;
+  padding: 10px;
+  background: linear-gradient(#fffaf0, #f3ead8);
+}
+
+.bars span {
+  flex: 1;
+  min-width: 6px;
+  border-radius: 4px 4px 0 0;
+  background: #9a4b2f;
+  transition: height 160ms ease;
+}
+
+@media (max-width: 860px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+  }
+
+  .stage {
+    padding: 18px;
+  }
+
+  .grid.two {
+    grid-template-columns: 1fr;
+  }
+
+  .stage-header {
+    display: block;
+  }
+}

@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>初面高频问题答案版</title>
+<style>
+:root {
+  --bg: #f6f3ea;
+  --paper: #fffaf0;
+  --ink: #202622;
+  --muted: #66736e;
+  --line: #ded5c3;
+  --green: #0d7c66;
+  --orange: #cf6235;
+  --soft: #e4f1ea;
+  --code: #14221e;
+  --codeText: #e9f7ef;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(13,124,102,.18), transparent 28rem),
+    radial-gradient(circle at 90% 10%, rgba(207,98,53,.14), transparent 25rem),
+    linear-gradient(135deg, #f8f4ea, #ece5d5);
+  font: 16px/1.75 "Iowan Old Style", "Palatino Linotype", "Songti SC", Georgia, serif;
+}
+.layout { display: grid; grid-template-columns: 310px minmax(0, 1fr); min-height: 100vh; }
+.side {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  padding: 28px 22px;
+  background: rgba(255,250,240,.78);
+  border-right: 1px solid rgba(100,84,58,.22);
+  backdrop-filter: blur(14px);
+}
+.tag {
+  color: var(--green);
+  font: 800 12px/1.2 "Avenir Next", "Helvetica Neue", sans-serif;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+h1 { margin: 12px 0 10px; font-size: 33px; line-height: 1.12; }
+.desc { color: var(--muted); font-size: 14px; }
+.toc { display: flex; flex-direction: column; gap: 4px; margin-top: 22px; }
+.toc a {
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 8px 9px;
+  font: 13px/1.35 "Avenir Next", "Helvetica Neue", sans-serif;
+}
+.toc a:hover { color: var(--ink); background: var(--soft); }
+.main { padding: 34px min(6vw, 72px) 96px; }
+.hero, .doc {
+  max-width: 1040px;
+  margin: 0 auto 26px;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: rgba(255,250,240,.92);
+  box-shadow: 0 18px 50px rgba(57,46,29,.12);
+}
+.hero { padding: 34px; background: linear-gradient(135deg, rgba(255,250,240,.95), rgba(228,241,234,.9)); }
+.hero h2 { margin: 0 0 10px; font-size: 36px; line-height: 1.15; }
+.hero p { margin: 0; max-width: 820px; color: var(--muted); font-size: 17px; }
+.doc { padding: 34px min(5vw, 60px); }
+h2 {
+  margin: 48px 0 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(100,84,58,.22);
+  font-size: 27px;
+  line-height: 1.25;
+}
+h2:first-child { margin-top: 0; border-top: 0; }
+h3 { margin: 28px 0 10px; font-size: 20px; }
+h4 { margin: 22px 0 8px; font-size: 17px; color: var(--green); }
+.qa {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fffdf7;
+  padding: 18px;
+  margin: 16px 0 22px;
+}
+.q {
+  margin: 0 0 10px;
+  color: var(--green);
+  font: 800 18px/1.45 "Avenir Next", "Helvetica Neue", sans-serif;
+}
+.answer { margin: 0; }
+.note {
+  border-left: 5px solid var(--green);
+  background: rgba(13,124,102,.08);
+  border-radius: 0 14px 14px 0;
+  padding: 13px 16px;
+  margin: 14px 0;
+}
+.warn { border-left-color: var(--orange); background: rgba(207,98,53,.08); }
+code {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  background: rgba(13,124,102,.1);
+  color: #075944;
+  border-radius: 6px;
+  padding: .12em .34em;
+}
+pre {
+  overflow: auto;
+  background: var(--code);
+  color: var(--codeText);
+  border-radius: 18px;
+  padding: 18px;
+  margin: 14px 0 18px;
+}
+pre code { background: transparent; color: inherit; padding: 0; }
+table { width: 100%; border-collapse: collapse; min-width: 640px; background: #fffdf7; }
+.table { overflow: auto; border: 1px solid var(--line); border-radius: 16px; margin: 14px 0 18px; }
+th, td { padding: 11px 13px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { background: #efe8d8; font: 800 13px/1.4 "Avenir Next", "Helvetica Neue", sans-serif; }
+tr:last-child td { border-bottom: 0; }
+ul, ol { padding-left: 1.35em; }
+.phrase {
+  background: var(--soft);
+  border: 1px solid rgba(13,124,102,.18);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-top: 12px;
+}
+.backtop { position: fixed; right: 22px; bottom: 20px; border: 1px solid var(--line); border-radius: 999px; padding: 9px 13px; background: #fffdf7; cursor: pointer; }
+@media (max-width: 960px) {
+  .layout { grid-template-columns: 1fr; }
+  .side { position: relative; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  .toc { max-height: 240px; overflow: auto; }
+  .main { padding: 20px 14px 80px; }
+  .hero, .doc { border-radius: 22px; }
+  .hero { padding: 24px; }
+  .hero h2 { font-size: 28px; }
+  .doc { padding: 24px 18px; }
+}
+@media print {
+  .side, .hero, .backtop { display: none; }
+  .layout { display: block; }
+  .main { padding: 0; }
+  .doc { box-shadow: none; border: 0; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="side">
+    <div class="tag">Interview Answers</div>
+    <h1>初面高频问题答案版</h1>
+    <div class="desc">基于你之前面过的问题，整理成可直接口述的答案。重点贴合 BI 报表、设备监测、Node/Nest、WebSocket 和数据库经验。</div>
+    <nav class="toc">
+      <a href="#bi">BI 报表与大数据处理</a>
+      <a href="#node">Node 高并发与事件循环</a>
+      <a href="#sql">慢 SQL 与 MySQL 高并发</a>
+      <a href="#alarm">频繁告警与表设计</a>
+      <a href="#ws">WebSocket 频繁推送</a>
+      <a href="#auth">JWT / Session</a>
+      <a href="#serverless">Serverless</a>
+      <a href="#kafka">Kafka 消息处理</a>
+      <a href="#quick">速记话术</a>
+    </nav>
+  </aside>
+  <main class="main">
+    <section class="hero">
+      <h2>把“被问到”变成“能稳定回答”</h2>
+      <p>回答时统一按这个结构：先说业务场景，再说技术方案，然后说权衡和结果。不要只背概念，尽量落到你的 BI 报表平台、电力设备监测云平台和智慧靶场驾驶舱。</p>
+    </section>
+    <article class="doc">
+      <h2 id="bi">1. BI 报表与大数据处理</h2>
+
+      <div class="qa">
+        <p class="q">Q1：BI 报表大数据处理怎么做？</p>
+        <div class="answer">
+          <p>我一般会分成三层处理：<strong>数据查询层、数据传输层、前端渲染层</strong>。BI 报表最怕把大数据量一次性查出来、一次性传给前端、一次性渲染到 DOM，这样接口慢、浏览器卡、内存也容易涨。</p>
+          <ol>
+            <li><strong>查询层</strong>：尽量在后端或数仓侧做聚合、筛选、分页、排序，只返回当前报表需要的字段和粒度，避免 <code>select *</code> 和前端全量计算。</li>
+            <li><strong>传输层</strong>：接口做分页、游标分页、按需加载；对仪表盘类页面可以拆接口并行请求，缓存公共字典、字段配置和报表配置。</li>
+            <li><strong>渲染层</strong>：大表格用虚拟滚动、冻结列优化、按需渲染；图表侧做采样、聚合、降频更新，避免每次数据变化都完整重绘。</li>
+            <li><strong>体验层</strong>：骨架屏、loading、导出任务异步化、错误重试，避免用户觉得页面卡死。</li>
+          </ol>
+          <div class="phrase">项目话术：在 BI 报表平台里，我主要负责报表查看、仪表盘和复杂表格能力。像字段类型渲染、列宽自适应、冻结列、下钻这些能力，本质都是围绕“大数据量下还能稳定展示和交互”来做的。</div>
+        </div>
+      </div>
+
+      <div class="qa">
+        <p class="q">Q2：数据清洗怎么做？</p>
+        <div class="answer">
+          <p>数据清洗我会分成<strong>入库前清洗、查询时规整、前端展示兜底</strong>三层。前端不应该承担所有清洗逻辑，但前端必须对异常数据有防御。</p>
+          <div class="table"><table>
+            <thead><tr><th>阶段</th><th>处理内容</th><th>例子</th></tr></thead>
+            <tbody>
+              <tr><td>入库前</td><td>类型转换、字段映射、单位统一、脏数据过滤</td><td>金额转 number，时间转标准格式，空字符串转 null</td></tr>
+              <tr><td>查询/接口层</td><td>聚合、补默认值、枚举翻译、字段裁剪</td><td>后端返回城市名、指标值、同比环比，而不是原始明细</td></tr>
+              <tr><td>前端层</td><td>展示兜底、格式化、异常提示</td><td>null 显示为 “-”，超长文本截断，非法日期不渲染图表</td></tr>
+            </tbody>
+          </table></div>
+          <p>常见清洗规则包括：去重、去空、类型转换、枚举标准化、时间格式统一、异常值处理、单位换算、精度处理、字段别名映射。</p>
+          <div class="phrase">项目话术：我在 BI 报表里会把字段解析、字段类型渲染、数据处理和渲染配置拆开。清洗不全放在图表组件里，而是在适配层把数据转成组件需要的统一结构。</div>
+        </div>
+      </div>
+
+      <div class="qa">
+        <p class="q">Q3：图表适配层怎么做？</p>
+        <div class="answer">
+          <p>图表适配层的核心是：<strong>屏蔽业务数据差异，让图表组件只消费统一协议</strong>。我会把它拆成四步：</p>
+          <pre><code>后端原始数据 / 报表配置
+  -> 字段解析 field parser
+  -> 数据转换 data transformer
+  -> 图表配置 option adapter
+  -> ECharts / VTable / 其他渲染器</code></pre>
+          <ol>
+            <li><strong>字段解析</strong>：识别维度、指标、字段类型、格式化方式、排序和钻取信息。</li>
+            <li><strong>数据转换</strong>：把接口返回的 rows 转成图表需要的 xAxis、series、columns、records。</li>
+            <li><strong>配置适配</strong>：把业务配置转成 ECharts option 或 VTable columns。</li>
+            <li><strong>事件适配</strong>：统一 click、hover、下钻、排序、筛选等事件回调。</li>
+          </ol>
+          <pre><code>// 简化示例
+function adaptChart({ rows, fields, chartType }) {
+  const dimension = fields.find(f => f.role === 'dimension');
+  const metrics = fields.filter(f => f.role === 'metric');
+
+  return {
+    xAxis: { data: rows.map(row => row[dimension.key]) },
+    series: metrics.map(metric => ({
+      name: metric.label,
+      type: chartType,
+      data: rows.map(row => Number(row[metric.key] ?? 0)),
+    })),
+  };
+}</code></pre>
+          <div class="phrase">项目话术：我在 BI 报表里做过 Storybook 图表组件库和 VTable 适配器模式，核心思路就是让业务字段、数据处理和渲染器解耦，后续换图表类型或复用到其他项目成本更低。</div>
+        </div>
+      </div>
+
+      <div class="qa">
+        <p class="q">Q4：有了解过市面上其他技术吗？</p>
+        <div class="answer">
+          <p>可以从“图表库、表格库、BI/低代码方案、数据处理方案”四类回答。</p>
+          <ul>
+            <li><strong>图表库</strong>：ECharts、AntV G2/G6、Chart.js、Highcharts。ECharts 生态成熟、中文资料多；AntV 更偏数据可视化语法和图分析。</li>
+            <li><strong>表格库</strong>：VTable、AG Grid、TanStack Table、Ant Design Table。AG Grid 功能强但商业版能力多；TanStack Table 无 UI、灵活但需要自己做渲染。</li>
+            <li><strong>BI/低代码</strong>：Superset、Metabase、FineBI、帆软、Quick BI。它们偏完整产品，项目自研一般是因为要贴合内部业务模型、权限和交互。</li>
+            <li><strong>数据处理</strong>：Web Worker、DuckDB-WASM、Apache Arrow、后端预聚合、OLAP 引擎。前端能做一部分，但大数据处理主力还是后端/数仓。</li>
+          </ul>
+          <div class="phrase">稳妥说法：我不会说只熟一个库。我更关注抽象层，底层可以接 ECharts、VTable 或其他渲染器，上层业务尽量不直接依赖某个库的 option 细节。</div>
+        </div>
+      </div>
+
+      <h2 id="node">2. Node 高并发与事件循环</h2>
+
+      <div class="qa">
+        <p class="q">Q5：Node 怎么处理高并发？</p>
+        <div class="answer">
+          <p>Node 适合高并发 I/O 场景，核心原因是<strong>单线程事件循环 + 非阻塞 I/O</strong>。请求进来后，网络、文件、数据库这类 I/O 不会一直阻塞 JS 主线程，回调完成后再回到事件循环处理。</p>
+          <p>但 Node 不适合直接在主线程做大量 CPU 密集计算，否则会阻塞事件循环，所有请求都变慢。</p>
+          <h4>工程上怎么做</h4>
+          <ol>
+            <li><strong>避免阻塞主线程</strong>：大 JSON 解析、大循环、图片处理、加密压缩等放 Worker Thread、子进程或独立服务。</li>
+            <li><strong>连接池</strong>：数据库、Redis、HTTP client 都要控制连接池，不能无限创建连接。</li>
+            <li><strong>限流和队列</strong>：对高成本接口做限流，写操作可进入队列削峰。</li>
+            <li><strong>缓存</strong>：热点配置、字典、用户权限、设备最新状态放 Redis。</li>
+            <li><strong>横向扩展</strong>：多进程 cluster / PM2 / 容器多副本 + Nginx 负载均衡。</li>
+          </ol>
+          <div class="phrase">项目话术：我在设备监测平台里更关注 I/O 链路，包括 TCP 报文接入、MySQL 落库、Redis 缓存和接口查询。Node/Nest 这类服务要控制好数据库连接、慢 SQL 和大数据响应，否则并发上来瓶颈往往在数据库或主线程阻塞。</div>
+        </div>
+      </div>
+
+      <div class="qa">
+        <p class="q">Q6：Node 事件循环说一下。</p>
+        <div class="answer">
+          <p>Node 的事件循环由 libuv 实现，负责调度定时器、I/O 回调、setImmediate、关闭回调等。每个阶段之间会清空微任务队列，Node 里还多了一个优先级更高的 <code>process.nextTick</code> 队列。</p>
+          <pre><code>一次事件循环大致阶段：
+timers              -> setTimeout / setInterval
+pending callbacks   -> 某些系统回调
+poll                -> I/O 回调
+check               -> setImmediate
+close callbacks     -> close 事件
+
+每个阶段之间：
+process.nextTick queue
+microtask queue（Promise.then / queueMicrotask）</code></pre>
+          <p>回答重点：Node 单线程指 JS 执行主线程，不代表底层只有一个线程。I/O、DNS、文件、加密等可能由系统或 libuv 线程池处理。</p>
+        </div>
+      </div>
+
+      <div class="qa">
+        <p class="q">Q7：process.nextTick 是什么？</p>
+        <div class="answer">
+          <p><code>process.nextTick</code> 是 Node 提供的特殊微任务队列，它会在当前调用栈结束后、进入事件循环下一个阶段前执行，而且优先级高于 Promise 微任务。</p>
+          <pre><code>console.log('start');
+
+setTimeout(() => console.log('timeout'), 0);
+Promise.resolve().then(() => console.log('promise'));
+process.nextTick(() => console.log('nextTick'));
+
+console.log('end');
+
+// 输出：
+// start
+// end
+// nextTick
+// promise
+// timeout</code></pre>
+          <p>风险是：如果递归调用大量 <code>process.nextTick</code>，会一直占用执行权，导致 I/O 和 timer 没机会执行，形成事件循环饥饿。</p>
+          <div class="phrase">面试回答：我会把 nextTick 用在需要“当前同步逻辑结束后立刻执行”的场景，但不会用它做大量递归任务。普通异步延后更推荐 Promise 或 setImmediate，看具体阶段需求。</div>
+        </div>
+      </div>
+
+      <h2 id="sql">3. 慢 SQL 与 MySQL 高并发读写</h2>
+
+      <div class="qa">
+        <p class="q">Q8：慢 SQL 怎么排查？</p>
+        <div class="answer">
+          <p>慢 SQL 排查我会按“确认瓶颈 -> 找 SQL -> 看执行计划 -> 改索引/SQL/数据量 -> 验证效果”的流程。</p>
+          <ol>
+            <li><strong>确认慢在哪里</strong>：看接口耗时拆分，是前端渲染慢、网络慢、应用逻辑慢，还是数据库慢。</li>
+            <li><strong>定位 SQL</strong>：打开慢查询日志，或在应用层打印 SQL、参数、耗时、traceId。</li>
+            <li><strong>EXPLAIN</strong>：看 type、key、rows、Extra，确认是否全表扫描、是否走错索引、是否 filesort/temporary。</li>
+            <li><strong>优化</strong>：加合适索引、调整联合索引顺序、避免函数包裹索引字段、减少 join、只查必要字段、分页优化。</li>
+            <li><strong>验证</strong>：对比优化前后耗时、扫描行数、QPS、CPU/IO。</li>
+          </ol>
+          <pre><code>EXPLAIN SELECT id, device_id, alarm_type, created_at
+FROM alarm_record
+WHERE device_id = ?
+  AND created_at BETWEEN ? AND ?
+ORDER BY created_at DESC
+LIMIT 50;</code></pre>
+          <div class="phrase">项目话术：我在电力设备监测平台里处理过核心接口从十几秒降到约 2 秒。我的思路不是一上来就加索引，而是先确认慢点，再看 SQL 扫描行数和执行计划，最后结合查询条件设计索引。</div>
+        </div>
+      </div>
+
+      <div class="qa">
+        <p class="q">Q9：MySQL 高并发读写策略？</p>
+        <div class="answer">
+          <p>MySQL 高并发要分读多、写多、冷热数据、强一致性要求来看。</p>
+          <h4>读优化</h4>
+          <ul>
+            <li>合理索引，减少扫描行数。</li>
+            <li>Redis 缓存热点数据，如设备最新状态、用户权限、字典配置。</li>
+            <li>读写分离，读请求走从库。</li>
+            <li>分页优化，避免深分页。</li>
+            <li>只查必要字段，避免大字段拖慢查询。</li>
+          </ul>
+          <h4>写优化</h4>
+          <ul>
+            <li>批量写入，减少单条 insert 频率。</li>
+            <li>异步队列削峰，Kafka / RabbitMQ / BullMQ 都可以。</li>
+            <li>合理控制索引数量，索引太多会拖慢写入。</li>
+            <li>按时间分区或冷热表拆分，报文/告警这类数据尤其适合。</li>
+            <li>事务尽量短，避免长事务和大事务。</li>
+          </ul>
+          <div class="phrase">设备场景回答：设备报文和告警通常是写多读也多。我会把原始报文、解析结果、告警记录分表设计；热点状态放 Redis；历史明细按时间分页/分区；高峰写入用队列削峰。</div>
+        </div>
+      </div>
+
+      <h2 id="alarm">4. 频繁告警处理与表设计</h2>
+
+      <div class="qa">
+        <p class="q">Q10：频繁告警怎么处理？</p>
+        <div class="answer">
+          <p>频繁告警不能简单一条报文生成一条告警，否则会刷屏、数据库膨胀、用户也无法处理。一般要做<strong>去重、收敛、升级、恢复</strong>。</p>
+          <ol>
+            <li><strong>去重</strong>：同设备、同告警类型、同规则，在一个时间窗口内只生成或更新一条活跃告警。</li>
+            <li><strong>收敛</strong>：给告警记录增加 count、first_time、last_time，重复触发只更新次数和最后触发时间。</li>
+            <li><strong>等级升级</strong>：连续触发次数超过阈值，告警等级从普通升级为严重。</li>
+            <li><strong>恢复机制</strong>：设备恢复正常后，把活跃告警置为 recovered，并记录恢复时间。</li>
+            <li><strong>通知限流</strong>：短信、钉钉、电话不能每次都发，要设置静默期和升级策略。</li>
+          </ol>
+          <div class="phrase">一句话：告警系统核心不是“产生告警”，而是“让用户看到有价值、可处理、可追踪的告警”。</div>
+        </div>
+      </div>
+
+      <div class="qa">
+        <p class="q">Q11：告警表怎么建？表关系怎么说？</p>
+        <div class="answer">
+          <p>可以按设备、规则、记录、通知四类表设计。</p>
+          <div class="table"><table>
+            <thead><tr><th>表</th><th>作用</th><th>关键字段</th></tr></thead>
+            <tbody>
+              <tr><td>device</td><td>设备台账</td><td>id、device_code、name、type、status、location_id</td></tr>
+              <tr><td>alarm_rule</td><td>告警规则</td><td>id、rule_code、device_type、metric、operator、threshold、level、enabled</td></tr>
+              <tr><td>alarm_record</td><td>告警记录</td><td>id、device_id、rule_id、alarm_type、level、status、count、first_time、last_time、recover_time</td></tr>
+              <tr><td>packet_raw</td><td>原始报文</td><td>id、device_id、raw_hex、received_at、parse_status</td></tr>
+              <tr><td>packet_parsed</td><td>解析结果</td><td>id、packet_id、device_id、metric、value、reported_at</td></tr>
+              <tr><td>alarm_notify_log</td><td>通知记录</td><td>id、alarm_id、channel、receiver、status、sent_at</td></tr>
+            </tbody>
+          </table></div>
+          <pre><code>device 1 --- n packet_raw 1 --- 1/n packet_parsed
+device 1 --- n alarm_record
+alarm_rule 1 --- n alarm_record
+alarm_record 1 --- n alarm_notify_log</code></pre>
+          <p>索引建议：</p>
+          <ul>
+            <li><code>alarm_record(device_id, status, last_time)</code> 查设备当前活跃告警。</li>
+            <li><code>alarm_record(rule_id, status, last_time)</code> 查规则触发情况。</li>
+            <li><code>packet_raw(device_id, received_at)</code> 查设备历史报文。</li>
+            <li><code>packet_parsed(device_id, metric, reported_at)</code> 查指标曲线。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2 id="ws">5. WebSocket 频繁推送场景处理</h2>
+
+      <div class="qa">
+        <p class="q">Q12：WebSocket 频繁推送怎么处理？</p>
+        <div class="answer">
+          <p>高频 WebSocket 不能每条消息都直接 <code>setState</code>，否则 React 会频繁重渲染，图表也会反复重绘。处理思路是<strong>服务端控频、前端缓冲、批量更新、增量渲染</strong>。</p>
+          <h4>服务端</h4>
+          <ul>
+            <li>按业务维度订阅，只推用户当前页面需要的数据。</li>
+            <li>合并消息，固定 100ms/500ms 推一次批量数据。</li>
+            <li>设置心跳和断线重连机制。</li>
+            <li>大消息压缩，或者只推增量。</li>
+          </ul>
+          <h4>前端</h4>
+          <ul>
+            <li>消息先进队列，用 <code>requestAnimationFrame</code> 或定时器批量消费。</li>
+            <li>只更新变化的数据，不重建整个图表 option。</li>
+            <li>图表用 appendData / setOption 局部更新。</li>
+            <li>连接、定时器、图表实例放 ref，组件卸载时清理。</li>
+          </ul>
+          <pre><code>const bufferRef = useRef([]);
+
+ws.onmessage = (event) => {
+  bufferRef.current.push(JSON.parse(event.data));
+};
+
+useEffect(() => {
+  const timer = setInterval(() => {
+    const batch = bufferRef.current.splice(0);
+    if (batch.length) {
+      updateChartIncrementally(batch);
+    }
+  }, 200);
+  return () => clearInterval(timer);
+}, []);</code></pre>
+          <div class="phrase">项目话术：智慧靶场驾驶舱里有 WebSocket 高频训练数据、ECharts 和 Unity WebGL。我不会每条消息都驱动 React 状态，而是做缓冲和增量更新，重点保证大屏长期运行稳定。</div>
+        </div>
+      </div>
+
+      <h2 id="auth">6. JWT 和 Session 策略</h2>
+
+      <div class="qa">
+        <p class="q">Q13：JWT 和 Session 策略说一下。</p>
+        <div class="answer">
+          <p>JWT 和 Session 都是登录态方案，区别在于状态存哪里。</p>
+          <div class="table"><table>
+            <thead><tr><th>方案</th><th>特点</th><th>优点</th><th>缺点</th></tr></thead>
+            <tbody>
+              <tr><td>Session</td><td>服务端保存登录态，客户端保存 sessionId</td><td>易失效、易控制、适合传统后台</td><td>服务端有状态，分布式要共享 session</td></tr>
+              <tr><td>JWT</td><td>token 自包含用户信息和过期时间</td><td>无状态、适合前后端分离和多服务</td><td>签发后不易主动失效，泄露风险要控制</td></tr>
+            </tbody>
+          </table></div>
+          <h4>常见策略</h4>
+          <ul>
+            <li>access token 短过期，refresh token 长过期。</li>
+            <li>敏感系统可把 token 加入 Redis 黑名单，实现主动登出。</li>
+            <li>JWT 只放必要信息，不放密码、手机号等敏感数据。</li>
+            <li>前端存储要权衡 XSS/CSRF：localStorage 怕 XSS，cookie 要处理 SameSite/CSRF。</li>
+          </ul>
+          <div class="phrase">项目话术：我在 NestJS 项目里做过 JWT + RBAC + 菜单权限。前端隐藏按钮只是体验，后端接口仍要用 Guard 校验权限。</div>
+        </div>
+      </div>
+
+      <h2 id="serverless">7. Serverless 服务</h2>
+
+      <div class="qa">
+        <p class="q">Q14：说一下 Serverless 服务。</p>
+        <div class="answer">
+          <p>Serverless 不是没有服务器，而是开发者不用直接管理服务器。常见形态是 FaaS，比如 AWS Lambda、阿里云函数计算。你只写函数，平台负责运行、扩缩容、计费和基础运维。</p>
+          <h4>适合场景</h4>
+          <ul>
+            <li>低频或波峰明显的接口。</li>
+            <li>图片处理、文件转码、定时任务。</li>
+            <li>Webhook、消息消费、异步任务。</li>
+            <li>简单 BFF 接口、边缘函数。</li>
+          </ul>
+          <h4>优点</h4>
+          <ul>
+            <li>按量计费，闲时成本低。</li>
+            <li>自动扩缩容。</li>
+            <li>不用维护服务器和进程。</li>
+          </ul>
+          <h4>缺点</h4>
+          <ul>
+            <li>冷启动。</li>
+            <li>运行时间、内存、包体积有限制。</li>
+            <li>本地调试和复杂状态管理更麻烦。</li>
+            <li>厂商绑定。</li>
+          </ul>
+          <div class="phrase">面试回答：如果是 H5 项目，我会把 Serverless 用在轻量 BFF、图片处理、定时任务、Webhook 上；核心长连接、高频实时推送或复杂状态服务，我会谨慎评估。</div>
+        </div>
+      </div>
+
+      <h2 id="kafka">8. Kafka 消息处理</h2>
+
+      <div class="qa">
+        <p class="q">Q15：Kafka 消息处理说一下。</p>
+        <div class="answer">
+          <p>Kafka 是分布式消息队列，适合高吞吐、可持久化、可回放的日志/事件流场景。核心概念是 topic、partition、producer、consumer、consumer group、offset。</p>
+          <pre><code>Producer -> Topic -> Partition -> Consumer Group
+                           |
+                         Offset</code></pre>
+          <h4>处理流程</h4>
+          <ol>
+            <li>生产者把消息写入 topic。</li>
+            <li>topic 按 partition 分区存储。</li>
+            <li>同一个 consumer group 内，一个 partition 同时只被一个 consumer 消费。</li>
+            <li>consumer 处理成功后提交 offset。</li>
+          </ol>
+          <h4>关键问题</h4>
+          <ul>
+            <li><strong>顺序性</strong>：同一个 partition 内有序；跨 partition 不保证全局顺序。</li>
+            <li><strong>重复消费</strong>：要做幂等，比如用 messageId 去重。</li>
+            <li><strong>消费失败</strong>：重试、死信队列、人工补偿。</li>
+            <li><strong>削峰</strong>：设备报文、告警事件先进入 Kafka，后端服务按能力消费。</li>
+          </ul>
+          <div class="phrase">项目迁移话术：如果设备报文量继续上升，我会考虑把 TCP 接入和解析落库解耦。接入层把报文写入 Kafka，解析服务消费消息，告警服务再消费解析结果，这样能削峰，也方便水平扩展。</div>
+        </div>
+      </div>
+
+      <h2 id="quick">9. 速记话术</h2>
+      <div class="qa">
+        <p class="q">遇到这些题时，怎么开头最稳？</p>
+        <ul>
+          <li><strong>BI 大数据：</strong>“我不会让前端一次性吃全量数据，会从查询、传输、渲染三层处理。”</li>
+          <li><strong>数据清洗：</strong>“清洗最好前移，但前端要做展示兜底和适配层标准化。”</li>
+          <li><strong>Node 高并发：</strong>“Node 适合 I/O 并发，但要避免主线程 CPU 阻塞，瓶颈通常在 DB、外部服务和事件循环。”</li>
+          <li><strong>慢 SQL：</strong>“先确认慢点，再拿 SQL 和参数看 explain，不是上来就加索引。”</li>
+          <li><strong>频繁告警：</strong>“告警要做去重、收敛、升级、恢复和通知限流。”</li>
+          <li><strong>WebSocket 高频：</strong>“不要每条消息 setState，要缓冲、批量、增量渲染。”</li>
+          <li><strong>JWT/Session：</strong>“JWT 无状态适合前后端分离，Session 可控性更强，关键看失效和安全策略。”</li>
+          <li><strong>Serverless：</strong>“适合低频、弹性、事件驱动任务，不适合所有长连接和复杂状态场景。”</li>
+          <li><strong>Kafka：</strong>“核心是 topic、partition、consumer group、offset，工程上重点处理顺序、重复、失败和幂等。”</li>
+        </ul>
+      </div>
+    </article>
+  </main>
+</div>
+<button class="backtop" onclick="scrollTo({top:0,behavior:'smooth'})">回到顶部</button>
+</body>
+</html>

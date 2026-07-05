@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<!--
+  Interview-prep template. The prep-interview skill replaces these placeholders:
+    面试准备｜前端开发工程师｜新致软件            -> page title string
+    __META__             -> JSON: { role, candidate, language, generated, coverage:{jd:[],cv:[]} }
+    __PROMPT_TEMPLATE__  -> JSON string of the copy prompt; contains {{QUESTION}} and {{FOLLOWUPS}}
+    __DATA__             -> JSON array: [ { category, questions:[ {q, level, source, followups:[]} ] } ]
+    __UI__               -> JSON labels: { progress, of, processed, copy_hint, copied, undo,
+                                           filter_category, filter_level, all, hide_processed,
+                                           why, followups, reset, foundational, core, advanced,
+                                           filter_jd, filter_cv, footer }
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>面试准备｜前端开发工程师｜新致软件</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --panel:#ffffff; --panel2:#f0f2f5; --line:#e3e6ec; --line2:#eef0f4;
+    --txt:#1f2430; --muted:#6b7280; --soft:#8a91a0; --accent:#3b6cf6; --accent-weak:#e8efff;
+    --good:#16a34a; --good-weak:#e7f6ec;
+    --found:#16a34a; --core:#c2860a; --adv:#dc2626;
+    --tree:#d4d9e2;
+    --shadow:0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Inter","Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--txt);
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  }
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:920px;margin:0 auto;padding:36px 22px 96px}
+
+  header h1{font-size:24px;line-height:1.3;margin:0 0 8px;letter-spacing:-.01em;font-weight:700}
+  .sub{color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+  .sub b{color:var(--txt);font-weight:600}
+  .sub .dot{width:3px;height:3px;border-radius:50%;background:var(--soft);display:inline-block}
+
+  .coverage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:22px 0 6px;box-shadow:var(--shadow)}
+  .cov-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:640px){.cov-cols{grid-template-columns:1fr}}
+  .coverage h3{margin:0 0 10px;font-size:11px;color:var(--soft);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px 11px;font-size:12px;color:var(--muted)}
+
+  .bar{position:sticky;top:0;z-index:5;background:linear-gradient(var(--bg),var(--bg) 78%,rgba(247,248,250,0));padding:14px 0 14px;margin-bottom:2px}
+  .progwrap{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+  .progtrack{flex:1;height:7px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .progfill{height:100%;width:0;background:var(--good);transition:width .3s ease}
+  .progtxt{font-size:13px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  select,button{font:inherit;font-size:13px;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:7px 11px;transition:border-color .15s,background .15s}
+  select:hover,button:hover{border-color:var(--accent)}
+  select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M3 4.5L6 7.5L9 4.5' stroke='%236b7280' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");background-repeat:no-repeat;background-position:right 9px center;padding-right:28px}
+  button{cursor:pointer}
+  label.toggle{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:13px;cursor:pointer;user-select:none}
+  label.toggle input{accent-color:var(--accent)}
+
+  /* section heading (category) */
+  .cat{display:flex;align-items:baseline;gap:10px;margin:30px 0 4px;padding-bottom:2px}
+  .cat .cat-name{font-size:13px;color:var(--soft);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+  .cat .cat-count{font-size:12px;color:var(--soft);font-variant-numeric:tabular-nums}
+
+  /* tree */
+  .tree{position:relative;margin-left:6px}
+  .node{position:relative;padding-left:26px}
+  .node::before{content:"";position:absolute;left:0;top:0;bottom:0;width:1.5px;background:var(--tree)}
+  .node:last-child::before{bottom:auto;height:22px}
+  .node::after{content:"";position:absolute;left:0;top:21px;width:18px;height:1.5px;background:var(--tree)}
+
+  .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin:9px 0;cursor:pointer;box-shadow:var(--shadow);transition:border-color .15s,box-shadow .15s,opacity .15s,transform .05s}
+  .card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(59,108,246,.10)}
+  .card:active{transform:translateY(.5px)}
+
+  .q-row{display:flex;gap:9px;align-items:flex-start}
+  .node-dot{flex:none;width:9px;height:9px;border-radius:50%;margin-top:6px;background:var(--accent);box-shadow:0 0 0 3px var(--accent-weak)}
+  .q-text{font-weight:600;flex:1;letter-spacing:-.005em}
+  .lvl{flex:none;font-size:10.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-top:1px}
+  .lvl.Foundational{color:var(--found);border-color:#bfe6c9;background:var(--good-weak)}
+  .lvl.Core{color:var(--core);border-color:#f0dcae;background:#fbf3e0}
+  .lvl.Advanced{color:var(--adv);border-color:#f3c2c2;background:#fdeaea}
+
+  .src{color:var(--muted);font-size:12.5px;margin:7px 0 0;padding-left:18px}
+  .src b{color:var(--txt);font-weight:600}
+
+  /* follow-up sub-tree */
+  .fu{margin:9px 0 1px;padding-left:18px}
+  .fu-label{font-size:11px;color:var(--soft);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:3px}
+  .fu-tree{position:relative;margin-left:3px}
+  .fu-item{position:relative;padding:3px 0 3px 20px;font-size:13.5px;color:var(--muted);line-height:1.5}
+  .fu-item::before{content:"";position:absolute;left:0;top:0;bottom:0;width:1.5px;background:var(--line)}
+  .fu-item:last-child::before{bottom:auto;height:15px}
+  .fu-item::after{content:"";position:absolute;left:0;top:14px;width:13px;height:1.5px;background:var(--line)}
+
+  .hint{font-size:12px;color:var(--accent);margin-top:9px;padding-left:18px;opacity:0;transition:opacity .15s}
+  .card:hover .hint{opacity:.9}
+
+  .card.done{opacity:.62;border-style:dashed;background:var(--good-weak)}
+  .card.done .node-dot{background:var(--good);box-shadow:0 0 0 3px var(--good-weak)}
+  .card.done .q-text::before{content:"✓ ";color:var(--good);font-weight:700}
+  .card.done .hint{opacity:0}
+  .undo{margin-left:auto;flex:none;font-size:12px;background:transparent;border:none;color:var(--muted);text-decoration:underline;padding:0;cursor:pointer;display:none}
+  .card.done .undo{display:inline}
+
+  .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--txt);color:#fff;font-weight:600;font-size:13px;padding:10px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:.25s;box-shadow:0 6px 20px rgba(16,24,40,.18)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .hidden{display:none!important}
+  footer{margin-top:38px;color:var(--soft);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="title"></h1>
+    <div class="sub" id="meta"></div>
+  </header>
+
+  <section class="coverage" id="coverage">
+    <div class="cov-cols">
+      <div><h3 id="lbl-jd">JD requirements</h3><div class="chips" id="cov-jd"></div></div>
+      <div><h3 id="lbl-cv">Resume areas</h3><div class="chips" id="cov-cv"></div></div>
+    </div>
+  </section>
+
+  <div class="bar">
+    <div class="progwrap">
+      <div class="progtrack"><div class="progfill" id="progfill"></div></div>
+      <div class="progtxt" id="progtxt"></div>
+    </div>
+    <div class="controls">
+      <select id="f-cat"></select>
+      <select id="f-lvl"></select>
+      <label class="toggle"><input type="checkbox" id="f-hide"> <span id="lbl-hide"></span></label>
+      <button id="reset"></button>
+    </div>
+  </div>
+
+  <div id="list"></div>
+  <footer id="foot"></footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const META = {"role":"前端开发工程师（5-10年，中大型 ToB/B端系统）","candidate":"项思哲","language":"中文","generated":"2026-06-18","coverage":{"jd":["JavaScript / TypeScript 核心原理","React / Vue 状态管理与原理","复杂表格、表单与流程图交互","HTTP、缓存、浏览器与 Web 安全","Webpack / Vite / ES Module 工程化","性能优化与性能监控","中后台架构、组件化与可测试性","数据可视化、WebGL 与大屏","Node.js / BFF 全栈能力","Git 协作、需求评审与跨团队沟通"],"cv":["BI 智能问数 Agent","LangGraph / LangChain / RAG / SQL Agent","BI 报表分析平台","Storybook / Monorepo / VTable","电力设备监测云平台","NestJS / TCP / JWT / RBAC / SQL 优化","智慧靶场驾驶舱","WebSocket / ECharts / Unity WebGL","Docker / Nginx 部署排障","前端组长与多项目交付经历"]}};
+const DATA = [{"category":"A｜JD：JavaScript、TypeScript 与浏览器基础","questions":[{"q":"请你解释 JavaScript 事件循环，宏任务、微任务和浏览器渲染之间是什么关系？","level":"Core","source":"JD：要求深入理解异步编程、浏览器工作原理","followups":["Promise、setTimeout、requestAnimationFrame 的执行顺序是什么？","微任务过多为什么可能阻塞页面渲染？","你在实际项目中如何定位主线程长任务？"]},{"q":"闭包的本质是什么？它在工程中有哪些合理用法和常见风险？","level":"Foundational","source":"JD：要求掌握闭包、作用域与 JavaScript 核心概念","followups":["闭包一定会造成内存泄漏吗？","如何用 Chrome DevTools 判断对象是否被意外引用？","React Hooks 中哪些场景容易出现闭包陈旧值问题？"]},{"q":"请比较原型链、class 语法和组合模式，它们在大型前端项目中分别适合什么场景？","level":"Core","source":"JD：要求理解原型链、面向对象与可复用代码设计","followups":["JavaScript 的继承和传统面向对象继承有什么差异？","为什么现代前端更常强调组合优于继承？","如何避免工具类和基类不断膨胀？"]},{"q":"你如何为一个复杂表格或表单系统设计 TypeScript 类型，使它既安全又不会过度复杂？","level":"Advanced","source":"JD：要求在实际项目中进行 TypeScript 类型设计","followups":["泛型、联合类型、映射类型分别会怎么用？","如何处理后端返回数据与前端领域模型不一致？","什么时候应该使用 unknown 而不是 any？"]},{"q":"从输入 URL 到页面可交互，浏览器经历了哪些关键阶段？","level":"Core","source":"JD：要求熟悉 HTTP/HTTPS、浏览器工作原理和页面渲染","followups":["DNS、TLS、HTTP 缓存分别发生在哪里？","HTML、CSS、JavaScript 如何影响首屏渲染？","DOMContentLoaded 和 load 的区别是什么？"]}]},{"category":"A｜JD：React、Vue 与中后台架构","questions":[{"q":"React Hooks 的执行规则是什么？为什么不能在条件语句中调用 Hook？","level":"Core","source":"JD：React 方向要求熟悉 Hooks 及其核心原理","followups":["useEffect 的依赖数组应该如何判断？","useMemo 和 useCallback 什么时候反而会降低收益？","如何封装一个稳定、可复用的自定义 Hook？"]},{"q":"React 的渲染、协调和提交阶段分别做什么？你如何减少无效渲染？","level":"Advanced","source":"JD：要求理解 React 核心原理并优化复杂中后台性能","followups":["key 为什么不能随意使用数组下标？","React.memo 失效的常见原因有哪些？","并发渲染解决的核心问题是什么？"]},{"q":"Vue 3 响应式系统的基本原理是什么？它与 Vue 2 的实现有什么关键差异？","level":"Core","source":"JD：Vue 优先，要求熟悉 Vue 3、Pinia、Vue Router","followups":["ref 和 reactive 应该如何选择？","computed 与 watch 的使用边界是什么？","为什么解构 reactive 对象可能丢失响应性？"]},{"q":"面对一个包含复杂表格、动态表单、流程节点和权限控制的中后台，你会如何拆分前端架构？","level":"Advanced","source":"JD：核心工作涉及复杂表格、表单、流程图和权限管理","followups":["哪些能力应该沉淀为领域组件，哪些只做业务组件？","如何组织状态，避免全局 Store 变成数据垃圾场？","如何保证模块可测试、可替换和可渐进演进？"]},{"q":"Redux、MobX、Pinia 和组件本地状态的选择标准是什么？","level":"Core","source":"JD：要求掌握 React/Vue 主流状态管理方案","followups":["服务端状态与客户端状态应该如何区分？","什么时候 Context 会导致性能问题？","如何设计跨页面持久化和状态恢复？"]}]},{"category":"A｜JD：工程化、性能与安全","questions":[{"q":"Webpack 和 Vite 的开发构建思路有什么差异？大型项目中你会如何选择和优化？","level":"Core","source":"JD：要求熟悉 Webpack 或 Vite 的配置与优化","followups":["Vite 为什么开发启动更快？","如何分析并缩小生产包体积？","依赖预构建、代码分割和 Tree Shaking 各解决什么问题？"]},{"q":"ES Module 和 CommonJS 在加载机制、静态分析和循环依赖上的差异是什么？","level":"Core","source":"JD：要求理解前端模块化开发","followups":["Tree Shaking 为什么依赖静态结构？","循环依赖一定会报错吗？","Node.js 混用 ESM 与 CommonJS 时有哪些坑？"]},{"q":"如果一个数据量很大的中后台页面出现首屏慢、滚动卡顿和交互延迟，你会怎样系统排查？","level":"Advanced","source":"JD：要求解决多数数据量下卡顿并提升全球用户体验","followups":["你会先看哪些性能指标和 DevTools 面板？","虚拟列表、分页、增量渲染分别适合什么场景？","如何区分网络、JavaScript、布局和绘制瓶颈？","优化后如何证明收益而不是凭感觉？"]},{"q":"前端缓存有哪些层次？你如何为静态资源、接口数据和用户操作状态分别设计缓存策略？","level":"Core","source":"JD：要求熟悉 HTTP/HTTPS 与缓存策略","followups":["强缓存和协商缓存的区别是什么？","带 hash 的静态资源为什么可以长期缓存？","如何避免缓存造成数据不一致或版本回退问题？"]},{"q":"中后台系统常见的 Web 安全风险有哪些？前端和服务端分别应承担什么责任？","level":"Core","source":"JD：要求熟悉常见 Web 安全防护","followups":["XSS、CSRF、点击劫持如何防护？","JWT 放在 localStorage 有什么风险？","前端权限控制为什么不能替代服务端鉴权？"]}]},{"category":"A｜JD：复杂交互、全栈与团队协作","questions":[{"q":"复杂表格组件需要支持冻结列、虚拟滚动、动态列和编辑校验时，你会如何设计数据模型与扩展机制？","level":"Advanced","source":"JD：核心工作包含复杂数据表格与高交互模块","followups":["如何避免一次状态变化导致整表重渲染？","列配置、单元格渲染器和业务规则如何解耦？","怎样设计可测试的表格编辑事务？"]},{"q":"数据可视化大屏中，ECharts、D3.js、Canvas、WebGL 和 Three.js 应如何选型？","level":"Core","source":"JD：加分项要求大屏可视化及 WebGL/Three.js 经验","followups":["数据点达到十万级时你会采用什么策略？","图表 resize 和高分屏适配怎么处理？","可视化组件如何处理主题、联动和销毁？"]},{"q":"什么情况下需要 BFF？用 Node.js 构建 BFF 时应重点处理哪些可靠性和安全问题？","level":"Core","source":"JD：加分项要求 Node.js 与 Koa/Express/NestJS 全栈能力","followups":["BFF 与 API Gateway 的职责边界是什么？","如何处理超时、重试、熔断和接口聚合？","Node.js 适合和不适合哪些计算任务？"]},{"q":"你如何把模糊的产品需求转化为可交付的前端技术方案，并推动产品、设计和后端达成一致？","level":"Advanced","source":"JD：要求参与需求评审、技术方案设计和跨团队协作","followups":["技术方案中会包含哪些关键章节？","需求频繁变化时如何控制返工成本？","你如何处理设计稿、接口和业务规则之间的冲突？"]}]},{"category":"B｜简历：BI 智能问数 Agent 与 AI 应用","questions":[{"q":"请完整介绍 BI 智能问数 Agent 从用户问题到最终图表展示的链路，并说明你负责的边界。","level":"Core","source":"CV：BI 智能问数 Agent 全栈开发经历","followups":["关键词扩充、字段指标理解和 SQL 生成分别如何实现？","前后端之间的中间状态通过 SSE 如何传递？","链路中最容易出错的节点是什么？"]},{"q":"你为什么使用 LangGraph 编排 SQL Agent？checkpoint 保存了什么状态，恢复流程如何保证一致性？","level":"Advanced","source":"CV：使用 LangGraph 多节点编排与 checkpoint 状态恢复","followups":["状态图与普通串行 Chain 的核心差异是什么？","节点重试会不会造成重复执行或脏状态？","如果要加入人工确认节点，你会怎么改图？"]},{"q":"你构建的元数据知识库如何组织表结构、字段别名、指标口径和字段取值？为什么同时使用 MySQL、Qdrant 和 Elasticsearch？","level":"Advanced","source":"CV：元数据知识库与 RAG 检索方案","followups":["向量检索与关键词检索分别擅长什么？","如何做召回融合、排序和上下文压缩？","元数据变化后如何更新索引并避免旧口径？"]},{"q":"SQL Agent 如何控制幻觉、越权查询和危险 SQL？你会如何评估它是否达到可上线标准？","level":"Advanced","source":"CV：自然语言生成 SQL 并访问业务数据","followups":["如何限制可访问的库、表、字段和行级数据？","SQL 执行前会做哪些静态检查和成本控制？","离线评测集和线上指标应该包含什么？","回答错误时怎样让系统可追踪、可解释？"]}]},{"category":"B｜简历：BI 报表平台与前端工程化","questions":[{"q":"BI 报表分析平台最复杂的前端问题是什么？你如何设计报表查看、仪表盘和导出分享的整体架构？","level":"Core","source":"CV：BI 报表分析平台核心链路开发","followups":["报表配置协议如何设计和版本化？","仪表盘中多个组件如何联动与隔离？","导出结果如何保证与页面展示一致？"]},{"q":"你基于 Storybook 和管道模式建设图表组件库，为什么选择这种设计？如何支持多个项目复用？","level":"Advanced","source":"CV：Storybook 图表组件库、管道模式与 npm 复用","followups":["管道中的输入、处理器和输出如何定义？","组件库如何管理主题、版本和破坏性变更？","Storybook 在测试和协作中具体发挥了什么作用？"]},{"q":"请解释你在 VTable 上使用适配器模式实现复杂表格能力的设计，适配器隔离了哪些变化？","level":"Advanced","source":"CV：VTable 适配器模式、字段渲染与表格下钻","followups":["不同字段类型如何映射到渲染器？","列宽自适应和冻结列有哪些性能代价？","下钻行为如何与路由、筛选条件和权限关联？"]},{"q":"图片 CDN、骨架屏、组件异步加载和多区域部署分别解决了什么问题？你如何衡量这些优化的实际效果？","level":"Core","source":"CV：BI 页面加载体验与多区域部署优化","followups":["你会关注 LCP、INP、CLS 中的哪些指标？","骨架屏什么时候会制造更差的体验？","跨区域访问如何处理静态资源与接口延迟？"]}]},{"category":"B｜简历：设备监控、实时可视化与个人贡献","questions":[{"q":"电力设备监测云平台如何接入并解析 TCP 报文？请说明粘包拆包、协议识别、持久化和异常处理方案。","level":"Advanced","source":"CV：NestJS TCP 报文接入与解析链路","followups":["如何根据长度字段或分隔符处理半包和粘包？","400+ 设备并发连接时怎样管理连接与背压？","原始报文和解析结果为什么都需要保留？"]},{"q":"你把关键接口从十几秒优化到约 2 秒，具体定位过程、SQL 改动和验证方法是什么？","level":"Advanced","source":"CV：核心接口与慢 SQL 性能优化成果","followups":["如何判断瓶颈在数据库、网络还是应用层？","你查看了哪些执行计划和索引指标？","优化是否影响数据一致性或写入性能？","上线后如何持续监控回归？"]},{"q":"智慧靶场驾驶舱中，RTSP 转 MPEG、WebSocket 高频数据和 Unity WebGL 三条实时链路是如何协同的？","level":"Advanced","source":"CV：Node.js 转码推流、WebSocket 与 Unity WebGL 三维展示","followups":["视频、轨迹和命中数据如何做时间同步？","断线重连与消息乱序如何处理？","长期运行出现白屏、卡顿和内存上涨时如何排查？"]},{"q":"你曾担任前端小组长，也经历了前端、全栈和 AI 应用角色。请举例说明你主导过的一次关键技术决策及其结果。","level":"Core","source":"CV：前端组长、跨角色交付与技术方案责任","followups":["当时有哪些备选方案，为什么没有选？","如何拆任务、识别风险并保证交付质量？","如果重新做一次，你会改变什么？"]},{"q":"请介绍一次你使用 Docker、Nginx 或日志排查解决线上问题的经历，要求说清现象、证据、根因和修复。","level":"Core","source":"CV：Docker / Nginx 部署、反向代理与线上排障经验","followups":["如何快速区分前端资源、代理、服务端和网络问题？","Nginx 中常见的跨域、缓存和超时配置问题有哪些？","修复后如何补充监控或流程避免复发？"]},{"q":"这份岗位偏 Vue，而你的简历以 React 为主。你会如何证明自己能快速承担 Vue 3 中后台开发？","level":"Core","source":"CV × JD：React 主栈与岗位 Vue 优先之间的匹配说明","followups":["React Hooks 与 Vue Composition API 有哪些可迁移经验？","你会如何在一周内熟悉现有 Vue 3 工程？","Pinia、Vue Router 和 Element Plus 的风险点有哪些？"]}]}];
+const UI = {"progress":"已完成 {done} / {total}","of":"/","processed":"已完成","copy_hint":"点击复制 AI 深挖提示词，并标记为已练习","copied":"已复制到剪贴板","undo":"取消标记","filter_category":"全部分类","filter_level":"全部难度","all":"全部","hide_processed":"隐藏已练习","why":"来源","followups":"可能追问","reset":"重置进度","foundational":"基础","core":"核心","advanced":"进阶","filter_jd":"JD 通用知识覆盖","filter_cv":"简历项目与技术覆盖","footer":"点击题目即可复制深挖提示词；练习进度仅保存在当前浏览器。"};
+const PROMPT_TEMPLATE = "请作为资深前端/全栈技术面试教练，针对下面的面试题做深入、务实的拆解。\n\n面试题：\n{{QUESTION}}\n\n面试官可能继续追问：\n{{FOLLOWUPS}}\n\n请按以下结构回答：\n1. 最佳回答：给出一份有层次、可口述的强回答，先讲结论，再讲原理、方案、权衡和实际案例；不要只堆概念。\n2. 加分点：指出哪些细节能体现资深度、工程经验、业务意识和真实性，并提醒容易踩雷或显得背题的说法。\n3. 追问应对：逐条回答上面的可能追问，并说明面试官在考察什么。\n4. 示例与验证：需要时给出精简代码、性能指标、排查步骤或测试方法。\n5. ASCII 图：当架构、执行流程、数据流或数据结构适合图示时，使用清晰的 ASCII 图辅助解释。\n6. 最后给出一个 2 分钟口述版，以及一份我可以继续补充的个人项目证据清单。";
+
+const KEY = "interviewprep:" + (META.role||"") + ":" + (META.candidate||"") + ":" + (META.generated||"");
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e){ state = {}; }
+const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} };
+
+// stable id per question
+const qid = (ci, qi) => "c" + ci + "q" + qi;
+
+// ---- header / meta ----
+document.title = document.getElementById("title").textContent = "面试准备｜前端开发工程师｜新致软件";
+const meta = document.getElementById("meta");
+const bits = [];
+if (META.role) bits.push(`<span><b>${esc(META.role)}</b></span>`);
+if (META.candidate) bits.push(`<span class="dot"></span><span>${esc(META.candidate)}</span>`);
+if (META.language) bits.push(`<span class="dot"></span><span>${esc(META.language)}</span>`);
+if (META.generated) bits.push(`<span class="dot"></span><span>${esc(META.generated)}</span>`);
+meta.innerHTML = bits.join("");
+
+// ---- coverage ----
+const cov = (META.coverage)||{jd:[],cv:[]};
+document.getElementById("cov-jd").innerHTML = (cov.jd||[]).map(t=>`<span class="chip">${esc(t)}</span>`).join("") || "—";
+document.getElementById("cov-cv").innerHTML = (cov.cv||[]).map(t=>`<span class="chip">${esc(t)}</span>`).join("") || "—";
+
+// ---- UI labels ----
+document.getElementById("lbl-jd").textContent = UI.filter_jd || "JD requirements";
+document.getElementById("lbl-cv").textContent = UI.filter_cv || "Resume areas";
+document.getElementById("lbl-hide").textContent = UI.hide_processed || "Hide processed";
+document.getElementById("reset").textContent = UI.reset || "Reset progress";
+
+// ---- filters ----
+const fCat = document.getElementById("f-cat");
+const fLvl = document.getElementById("f-lvl");
+fCat.innerHTML = `<option value="">${esc(UI.filter_category||"All categories")}</option>` +
+  DATA.map(c=>`<option value="${esc(c.category)}">${esc(c.category)}</option>`).join("");
+const levels = ["Foundational","Core","Advanced"];
+const lvlLabel = l => ({Foundational:UI.foundational, Core:UI.core, Advanced:UI.advanced}[l] || l);
+fLvl.innerHTML = `<option value="">${esc(UI.filter_level||"All levels")}</option>` +
+  levels.map(l=>`<option value="${l}">${esc(lvlLabel(l))}</option>`).join("");
+
+// ---- render ----
+const list = document.getElementById("list");
+function render(){
+  list.innerHTML = "";
+  const cf = fCat.value, lf = fLvl.value, hide = document.getElementById("f-hide").checked;
+  DATA.forEach((cat, ci) => {
+    if (cf && cat.category !== cf) return;
+    const visibleQs = cat.questions.map((q,qi)=>({q,qi})).filter(({q,qi})=>{
+      if (lf && q.level !== lf) return false;
+      if (hide && state[qid(ci,qi)]) return false;
+      return true;
+    });
+    if (!visibleQs.length) return;
+
+    const h = document.createElement("div"); h.className="cat";
+    h.innerHTML = `<span class="cat-name">${esc(cat.category)}</span><span class="cat-count">${visibleQs.length}</span>`;
+    list.appendChild(h);
+
+    const tree = document.createElement("div"); tree.className="tree";
+    visibleQs.forEach(({q,qi})=>{
+      const id = qid(ci,qi);
+      const done = !!state[id];
+      const node = document.createElement("div"); node.className="node";
+      const card = document.createElement("div");
+      card.className = "card" + (done?" done":"");
+      const fu = (q.followups||[]).map(f=>`<div class="fu-item">${esc(f)}</div>`).join("");
+      card.innerHTML =
+        `<div class="q-row">`+
+          `<span class="node-dot"></span>`+
+          `<span class="q-text">${esc(q.q)}</span>`+
+          `<span class="lvl ${q.level}">${esc(lvlLabel(q.level))}</span>`+
+          `<button class="undo" data-id="${id}">${esc(UI.undo||"undo")}</button>`+
+        `</div>`+
+        (q.source?`<div class="src"><b>${esc(UI.why||"Why")}:</b> ${esc(q.source)}</div>`:``)+
+        (fu?`<div class="fu"><div class="fu-label">${esc(UI.followups||"Likely follow-ups")}</div><div class="fu-tree">${fu}</div></div>`:``)+
+        `<div class="hint">${esc(UI.copy_hint||"Click to copy a deep-dive prompt + mark as processed")}</div>`;
+      card.addEventListener("click", (e)=>{
+        if (e.target.classList.contains("undo")){
+          e.stopPropagation(); delete state[id]; save(); render(); updateProgress(); return;
+        }
+        copyPrompt(q);
+        if (!state[id]){ state[id]=true; save(); }
+        render(); updateProgress();
+      });
+      node.appendChild(card);
+      tree.appendChild(node);
+    });
+    list.appendChild(tree);
+  });
+}
+
+function buildPrompt(q){
+  const fu = (q.followups||[]).map((f,i)=>`${i+1}. ${f}`).join("\n");
+  return PROMPT_TEMPLATE.replace(/\{\{QUESTION\}\}/g, q.q).replace(/\{\{FOLLOWUPS\}\}/g, fu || "—");
+}
+function copyPrompt(q){
+  const text = buildPrompt(q);
+  const done = ()=>toast(UI.copied||"Copied to clipboard");
+  if (navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+  } else { fallbackCopy(text, done); }
+}
+function fallbackCopy(text, cb){
+  const ta=document.createElement("textarea"); ta.value=text;
+  ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try{ document.execCommand("copy"); cb&&cb(); }catch(e){ alert(text); }
+  document.body.removeChild(ta);
+}
+
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),1400);
+}
+
+function updateProgress(){
+  let total=0, done=0;
+  DATA.forEach((c,ci)=>c.questions.forEach((q,qi)=>{ total++; if(state[qid(ci,qi)]) done++; }));
+  document.getElementById("progfill").style.width = total? (100*done/total)+"%" : "0";
+  const tpl = UI.progress || "{done} of {total} processed";
+  document.getElementById("progtxt").textContent = tpl.replace("{done}",done).replace("{total}",total);
+}
+
+document.getElementById("reset").addEventListener("click", ()=>{
+  state={}; save(); render(); updateProgress();
+});
+fCat.addEventListener("change", render);
+fLvl.addEventListener("change", render);
+document.getElementById("f-hide").addEventListener("change", render);
+
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+document.getElementById("foot").textContent = (UI.footer||"Generated study sheet — progress saved locally in your browser.");
+render(); updateProgress();
+</script>
+</body>
+</html>

@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LangChain / LangGraph / DeepAgents 面试手册</title>
+<style>
+:root{
+  --bg:#f3f0e7; --paper:#fffaf0; --ink:#202622; --muted:#68746d; --line:#ddd4c2;
+  --green:#0b7b64; --orange:#d56335; --blue:#285b92; --soft:#e4f1ea; --code:#12201c; --codeText:#e9f7ef;
+  --shadow:0 18px 50px rgba(57,46,29,.14);
+}
+*{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;color:var(--ink);background:radial-gradient(circle at 10% 0%,rgba(11,123,100,.18),transparent 28rem),radial-gradient(circle at 90% 6%,rgba(213,99,53,.14),transparent 25rem),linear-gradient(135deg,#f6f2e8,#ece5d4);font:16px/1.72 "Iowan Old Style","Palatino Linotype","Songti SC",Georgia,serif} body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.25;background-image:linear-gradient(rgba(32,38,34,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(32,38,34,.05) 1px,transparent 1px);background-size:28px 28px;mask-image:linear-gradient(#000,transparent 85%)}
+.app{display:grid;grid-template-columns:320px minmax(0,1fr);min-height:100vh}.side{position:sticky;top:0;height:100vh;overflow:auto;padding:28px 22px;background:rgba(255,250,240,.76);border-right:1px solid rgba(96,82,55,.22);backdrop-filter:blur(16px)}.main{padding:34px min(6vw,72px) 90px}.brand .tag{font:800 12px/1 "Avenir Next","Helvetica Neue",sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--green)}h1{font-size:34px;line-height:1.1;margin:13px 0 10px}.desc{color:var(--muted);font-size:14px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}.stat{border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,.42)}.stat b{display:block;font-size:22px;color:var(--green);line-height:1}.stat span{font:12px/1.3 "Avenir Next","Helvetica Neue",sans-serif;color:var(--muted)}.search input{width:100%;border:1px solid var(--line);border-radius:999px;padding:11px 14px;background:#fffdf7;outline:none}.search input:focus{border-color:var(--green);box-shadow:0 0 0 4px rgba(11,123,100,.12)}.toc{display:flex;flex-direction:column;gap:3px;margin-top:16px}.toc a{font:13px/1.35 "Avenir Next","Helvetica Neue",sans-serif;text-decoration:none;color:var(--muted);border-radius:10px;padding:7px 9px}.toc a:hover,.toc a.active{background:var(--soft);color:var(--ink)}.hero{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:30px;padding:38px;background:linear-gradient(135deg,rgba(255,250,240,.94),rgba(226,240,231,.9));box-shadow:var(--shadow);margin-bottom:26px}.hero:after{content:"LCEL → StateGraph → DeepAgent";position:absolute;right:-18px;bottom:10px;color:rgba(11,123,100,.09);font:900 42px/1 "Avenir Next","Helvetica Neue",sans-serif;white-space:nowrap}.hero h2{margin:0 0 12px;font-size:40px;line-height:1.12}.hero p{max-width:800px;color:var(--muted);font-size:17px;margin:0}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}button{border:1px solid var(--line);border-radius:999px;padding:9px 13px;background:#fffdf7;cursor:pointer;font:800 13px/1 "Avenir Next","Helvetica Neue",sans-serif;color:var(--ink)}button:hover{border-color:var(--green);color:var(--green)}.doc{max-width:1060px;margin:0 auto;border:1px solid var(--line);border-radius:30px;background:rgba(255,250,240,.92);box-shadow:var(--shadow);padding:36px min(5vw,62px)}h2{margin:54px 0 16px;padding-top:14px;border-top:1px solid rgba(96,82,55,.22);font-size:28px;line-height:1.25}h2:first-child{margin-top:0;border-top:0}h3{margin:32px 0 10px;font-size:21px}h4{font-size:17px;color:var(--green);margin:24px 0 8px}.lead{font-size:18px;color:#39433d}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}.card{border:1px solid var(--line);border-radius:18px;background:#fffdf7;padding:16px}.card h3{margin:0 0 8px;font-size:18px}.pill{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:3px 9px;margin:3px;background:#fffdf7;color:var(--muted);font:12px/1.3 "Avenir Next","Helvetica Neue",sans-serif}.note{border-left:5px solid var(--green);background:rgba(11,123,100,.08);padding:14px 18px;border-radius:0 14px 14px 0;margin:18px 0}.warn{border-left-color:var(--orange);background:rgba(213,99,53,.08)}code{font-family:"SFMono-Regular",Consolas,monospace;background:rgba(11,123,100,.10);color:#075944;border-radius:6px;padding:.12em .34em;font-size:.92em}pre{position:relative;overflow:auto;background:var(--code);color:var(--codeText);border-radius:18px;padding:18px;margin:16px 0 24px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}pre code{background:transparent;color:inherit;padding:0}.copy{position:absolute;right:10px;top:10px;border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;padding:6px 9px}table{width:100%;border-collapse:collapse;background:#fffdf7;min-width:720px}.table{overflow:auto;border:1px solid var(--line);border-radius:16px;margin:16px 0 22px}th,td{padding:11px 13px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#efe8d8;font:800 13px/1.4 "Avenir Next","Helvetica Neue",sans-serif}tr:last-child td{border-bottom:0}ul,ol{padding-left:1.4em}.flow{white-space:pre;overflow:auto;border-radius:18px;background:#18231f;color:#e9f7ef;padding:18px;font-family:"SFMono-Regular",Consolas,monospace}.sources a{color:var(--green)}mark{background:#ffe6a3;border-radius:4px}.backtop{position:fixed;right:22px;bottom:20px;z-index:3}@media(max-width:1000px){.app{grid-template-columns:1fr}.side{position:relative;height:auto;border-right:0;border-bottom:1px solid var(--line)}.toc{max-height:260px;overflow:auto}.main{padding:20px 14px 80px}.hero{padding:24px;border-radius:22px}.hero h2{font-size:28px}.hero:after{display:none}.doc{padding:24px 18px;border-radius:22px}.grid{grid-template-columns:1fr}}@media print{.side,.hero,.backtop{display:none}.app{display:block}.main{padding:0}.doc{box-shadow:none;border:0}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><div class="tag">Agent Interview Manual</div><h1>LangChain / LangGraph / DeepAgents</h1><div class="desc">概念解释、示例代码、面试回答、中间件接入方式，一页复习。</div></div>
+    <div class="stats"><div class="stat"><b>3</b><span>核心框架</span></div><div class="stat"><b>25+</b><span>代码/方案片段</span></div></div>
+    <div class="search"><input id="search" placeholder="搜索：Tool、State、Checkpoint、Redis..." /></div>
+    <nav class="toc" id="toc"></nav>
+  </aside>
+  <main class="main">
+    <section class="hero"><h2>把“会用 AI 框架”讲成“能落地 Agent 应用”</h2><p>这份手册围绕求职面试最常问的三件套：LangChain 负责模型/工具/RAG 组件，LangGraph 负责状态化编排，DeepAgents 负责更上层的工程化 Agent harness。</p><div class="toolbar"><button onclick="window.print()">打印 / 导出 PDF</button><button id="clearSearch">清空搜索</button></div></section>
+    <article class="doc" id="doc">
+      <h2>0. 一张总图：三者到底是什么关系</h2>
+      <p class="lead">最稳的表达是：<strong>LangChain 是组件层，LangGraph 是编排运行时，DeepAgents 是面向复杂任务的 Agent 工程套件。</strong></p>
+      <div class="flow">用户需求
+  │
+  ▼
+LangChain：Prompt / Model / Tool / OutputParser / RAG / LCEL
+  │  适合：单步调用、线性链路、快速 agent
+  ▼
+LangGraph：State / Node / Edge / Conditional Edge / Checkpoint / Interrupt
+  │  适合：多步骤、有分支、可恢复、可人工确认的流程
+  ▼
+DeepAgents：Planning / Todo / Filesystem / Subagents / Memory / Middleware
+     适合：长任务、复杂项目、需要子代理和上下文管理的应用</div>
+      <div class="table"><table><thead><tr><th>框架</th><th>一句话</th><th>面试关键词</th><th>什么时候用</th></tr></thead><tbody>
+        <tr><td>LangChain</td><td>构建 LLM 应用和 Agent 的基础组件与集成层。</td><td>PromptTemplate、Model、Tool、OutputParser、Runnable、RAG</td><td>要快速把模型、工具、检索、结构化输出串起来。</td></tr>
+        <tr><td>LangGraph</td><td>低层 Agent orchestration runtime，用状态图控制复杂流程。</td><td>State、Node、Edge、Conditional Edge、Checkpoint、Interrupt</td><td>流程需要循环、分支、状态持久化、人工介入、多 Agent。</td></tr>
+        <tr><td>DeepAgents</td><td>基于 LangChain/LangGraph 的 agent harness，内置复杂任务常用能力。</td><td>planning、todo、filesystem、subagents、memory、permissions、middleware</td><td>要做类似 Claude Code/Cursor 的长任务 Agent。</td></tr>
+      </tbody></table></div>
+
+      <h2>1. LangChain：你必须讲清楚的核心组件</h2>
+      <h3>1.1 PromptTemplate：把 prompt 从字符串变成可维护模板</h3>
+      <p>PromptTemplate 解决的是 prompt 复用、变量注入、输出约束和测试的问题。不要把 prompt 写成随手拼接的字符串，否则后续很难维护。</p>
+      <pre><button class="copy">复制</button><code class="language-ts">import { PromptTemplate } from "@langchain/core/prompts";
+
+const sqlPrompt = PromptTemplate.fromTemplate(`
+你是一个 BI SQL 助手。
+根据用户问题和字段说明生成 SQL。
+
+用户问题：{question}
+字段说明：{schema}
+
+要求：
+1. 只使用字段说明里出现的表和字段。
+2. 只输出 SQL，不要解释。
+3. 默认加 LIMIT 100。
+`);
+
+const promptValue = await sqlPrompt.invoke({
+  question: "最近 7 天各地区销售额是多少？",
+  schema: "orders(region, amount, created_at)",
+});</code></pre>
+      <div class="note"><strong>面试讲法：</strong>PromptTemplate 的价值不是“好看”，而是让 prompt 参数化、可测试、可版本化。复杂 Agent 里每个节点最好有独立 prompt。</div>
+
+      <h3>1.2 Model：统一不同模型供应商的调用方式</h3>
+      <p>LangChain 的 Model 抽象让你用类似接口接 OpenAI、Anthropic、Gemini 或 OpenAI-compatible 模型。它屏蔽了不同厂商消息格式差异，但不保证模型能力完全一致。</p>
+      <pre><button class="copy">复制</button><code class="language-ts">import { ChatOpenAI } from "@langchain/openai";
+
+const model = new ChatOpenAI({
+  model: process.env.MODEL_NAME ?? "qwen-plus",
+  temperature: 0,
+  apiKey: process.env.OPENAI_API_KEY,
+  configuration: {
+    baseURL: process.env.OPENAI_BASE_URL,
+  },
+});
+
+const res = await model.invoke("用一句话解释 RAG");
+console.log(res.content);</code></pre>
+      <p><strong>常见追问：</strong>temperature 怎么选？结构化输出一般设低温；创意文案可以升高。模型能不能 tool calling、structured output、streaming，要实测。</p>
+
+      <h3>1.3 OutputParser / Structured Output：让模型输出能被程序消费</h3>
+      <p>模型自然语言输出不稳定，程序需要 JSON、枚举、数组等稳定结构。OutputParser 或 structured output 就是为了把“文本”变成“数据”。</p>
+      <pre><button class="copy">复制</button><code class="language-ts">import { z } from "zod";
+
+const QueryPlan = z.object({
+  metric: z.string().describe("用户要查询的指标"),
+  dimensions: z.array(z.string()).describe("分组维度"),
+  timeRange: z.string().describe("时间范围"),
+});
+
+const planner = model.withStructuredOutput(QueryPlan, {
+  name: "query_plan",
+});
+
+const plan = await planner.invoke("按城市统计昨天订单数");
+// { metric: "订单数", dimensions: ["城市"], timeRange: "昨天" }</code></pre>
+      <div class="note warn"><strong>容易混：</strong>Structured Output 是让模型按 schema 输出；Tool Calling 是让模型决定调用真实函数。两者底层可能都借助 function/tool schema，但目的不同。</div>
+
+      <h3>1.4 Tool：让模型能行动</h3>
+      <p>Tool 是带描述和参数 schema 的函数。模型不是直接执行代码，而是生成 tool call；程序执行工具后，把 ToolMessage 结果放回消息列表。</p>
+      <pre><button class="copy">复制</button><code class="language-ts">import { tool } from "@langchain/core/tools";
+import { z } from "zod";
+
+const getOrderCount = tool(async ({ city, date }) => {
+  // 真实项目里这里查数据库或调用后端 API
+  return JSON.stringify({ city, date, count: 1280 });
+}, {
+  name: "get_order_count",
+  description: "查询某城市某天的订单数",
+  schema: z.object({
+    city: z.string(),
+    date: z.string(),
+  }),
+});
+
+const modelWithTools = model.bindTools([getOrderCount]);
+const aiMessage = await modelWithTools.invoke("查一下杭州昨天订单数");
+console.log(aiMessage.tool_calls);</code></pre>
+      <p><strong>Tool 设计原则：</strong>名字明确、描述具体、参数少而准、返回结构化、失败也结构化、危险操作加确认。</p>
+
+      <h3>1.5 Runnable / LCEL：把组件串成链</h3>
+      <p>Runnable 是 LangChain 统一调用协议，常见方法是 <code>invoke</code>、<code>batch</code>、<code>stream</code>。LCEL 用管道把 prompt、model、parser、retriever 串起来。</p>
+      <pre><button class="copy">复制</button><code class="language-ts">import { StringOutputParser } from "@langchain/core/output_parsers";
+import { RunnableSequence } from "@langchain/core/runnables";
+
+const prompt = PromptTemplate.fromTemplate("把下面内容总结成三点：{text}");
+const parser = new StringOutputParser();
+
+// 两种写法都常见：pipe 或 RunnableSequence
+const chain = prompt.pipe(model).pipe(parser);
+// const chain = RunnableSequence.from([prompt, model, parser]);
+
+const summary = await chain.invoke({ text: "这里是一段很长的会议纪要..." });</code></pre>
+      <div class="note"><strong>面试回答：</strong>普通 chain 适合线性流程；如果出现循环、条件分支、人工确认、状态恢复，就升级到 LangGraph。</div>
+
+      <h3>1.6 RAG 基础链路：让模型使用你的私有知识</h3>
+      <div class="flow">文档/网页/PDF
+  → Loader 加载成 Document
+  → Splitter 切成 chunk
+  → Embedding 转向量
+  → VectorStore 存储
+  → Retriever 根据 query 取 topK
+  → Prompt 注入上下文
+  → Model 生成答案</div>
+      <pre><button class="copy">复制</button><code class="language-ts">import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { RunnablePassthrough } from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+
+const docs = [{ pageContent: "LangGraph 用状态图编排复杂 Agent。", metadata: { source: "note" } }];
+const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 500, chunkOverlap: 80 });
+const chunks = await splitter.splitDocuments(docs);
+
+const vectorstore = await MemoryVectorStore.fromDocuments(
+  chunks,
+  new OpenAIEmbeddings({ model: process.env.EMBEDDINGS_MODEL_NAME })
+);
+const retriever = vectorstore.asRetriever({ k: 4 });
+
+const ragPrompt = PromptTemplate.fromTemplate(`
+只根据上下文回答问题。\n\n上下文：{context}\n\n问题：{question}
+`);
+
+const formatDocs = (docs) => docs.map(d => d.pageContent).join("\n\n");
+
+const ragChain = RunnableSequence.from([
+  {
+    context: retriever.pipe(formatDocs),
+    question: new RunnablePassthrough(),
+  },
+  ragPrompt,
+  model,
+  new StringOutputParser(),
+]);
+
+const answer = await ragChain.invoke("LangGraph 解决什么问题？");</code></pre>
+      <p><strong>RAG 面试重点：</strong>chunk size、overlap、embedding、topK、rerank、query rewrite、引用来源、幻觉控制、权限过滤。</p>
+
+      <h3>1.7 怎么把模型调用、结构化输出、工具调用、检索组合成一个链</h3>
+      <p>回答时不要只说“用 LCEL 串起来”，要讲清楚各层职责。</p>
+      <div class="flow">用户问题
+  → Structured Output 提取意图/参数
+  → Retriever 检索业务知识/字段说明
+  → PromptTemplate 组装任务上下文
+  → Model 生成工具调用或答案
+  → Tool 查数据库/API
+  → OutputParser 整理最终 JSON/文本
+  → 前端渲染</div>
+      <pre><button class="copy">复制</button><code class="language-ts">// 伪代码：BI 问数链路
+const intent = await intentExtractor.invoke(userQuestion);
+const context = await retriever.invoke(intent.metric + " " + intent.dimensions.join(" "));
+const sql = await sqlGenerator.invoke({ question: userQuestion, context });
+const rows = await queryDatabaseTool.invoke({ sql });
+const finalAnswer = await answerFormatter.invoke({ question: userQuestion, rows });</code></pre>
+
+      <h2>2. LangGraph：为什么不用普通 chain，而要用状态图</h2>
+      <p class="lead">普通 chain 是流水线；LangGraph 是状态机。只要流程需要“根据上一步结果决定下一步”，LangGraph 就更稳。</p>
+      <h3>2.1 State：流程共享状态</h3>
+      <p>State 是图里每个节点共享的数据。它不只是 messages，也可以包含 question、retrievedDocs、sql、error、retryCount、finalAnswer。</p>
+      <pre><button class="copy">复制</button><code class="language-ts">import { StateGraph, StateSchema, START, END } from "@langchain/langgraph";
+import { z } from "zod/v4";
+
+const AgentState = new StateSchema({
+  question: z.string(),
+  docs: z.array(z.string()).default([]),
+  sql: z.string().optional(),
+  error: z.string().optional(),
+  answer: z.string().optional(),
+});</code></pre>
+
+      <h3>2.2 Node：一个明确处理步骤</h3>
+      <p>Node 是函数：接收 state，返回部分 state 更新。好的节点应该职责单一。</p>
+      <pre><button class="copy">复制</button><code class="language-ts">const retrieveNode = async (state) => {
+  const docs = await retriever.invoke(state.question);
+  return { docs: docs.map(d => d.pageContent) };
+};
+
+const answerNode = async (state) => {
+  const res = await model.invoke(`根据资料回答：${state.docs.join("\n")}\n问题：${state.question}`);
+  return { answer: String(res.content) };
+};</code></pre>
+
+      <h3>2.3 Edge / Conditional Edge：固定流转和条件流转</h3>
+      <p>Edge 表示固定下一步；Conditional Edge 表示根据 state 路由。</p>
+      <pre><button class="copy">复制</button><code class="language-ts">const graph = new StateGraph(AgentState)
+  .addNode("retrieve", retrieveNode)
+  .addNode("answer", answerNode)
+  .addEdge(START, "retrieve")
+  .addEdge("retrieve", "answer")
+  .addEdge("answer", END)
+  .compile();</code></pre>
+      <pre><button class="copy">复制</button><code class="language-ts">const routeAfterSql = (state) => {
+  if (state.error && state.retryCount < 2) return "fix_sql";
+  if (state.error) return "fail";
+  return "summarize";
+};
+
+graphBuilder.addConditionalEdges("execute_sql", routeAfterSql, [
+  "fix_sql",
+  "fail",
+  "summarize",
+]);</code></pre>
+
+      <h3>2.4 Checkpoint：流程可恢复</h3>
+      <p>Checkpoint 把每一步 state 存下来。它解决长任务失败恢复、多轮对话线程状态、人工中断后继续执行的问题。</p>
+      <pre><button class="copy">复制</button><code class="language-ts">import { MemorySaver } from "@langchain/langgraph";
+
+const checkpointer = new MemorySaver();
+const app = graphBuilder.compile({ checkpointer });
+
+await app.invoke(
+  { question: "查一下昨天销售额" },
+  { configurable: { thread_id: "user-123-session-1" } }
+);</code></pre>
+      <p><strong>面试讲法：</strong>Checkpoint 保存的是工作流状态，不等于长期记忆。它更像“流程快照”。</p>
+
+      <h3>2.5 Interrupt：关键步骤让人确认</h3>
+      <p>Interrupt 用于 Human-in-the-loop。比如执行删除、发邮件、跑 SQL、扣费前暂停，让用户确认。</p>
+      <pre><button class="copy">复制</button><code class="language-ts">// 伪代码：执行 SQL 前中断确认
+const confirmSqlNode = async (state) => {
+  // 实际项目中用 LangGraph interrupt API 暂停并返回给前端
+  return { needsApproval: true, sqlPreview: state.sql };
+};</code></pre>
+
+      <h3>2.6 SQL Agent 怎么拆节点</h3>
+      <div class="flow">question
+  → extract_intent：抽取指标、维度、时间
+  → retrieve_schema：检索表结构/字段说明/指标口径
+  → generate_sql：生成 SQL
+  → validate_sql：检查表名、字段、危险语句
+  → execute_sql：执行查询
+  → if error → fix_sql → execute_sql
+  → summarize：把 rows 转成自然语言/图表配置</div>
+      <div class="note"><strong>为什么用 LangGraph：</strong>SQL Agent 有错误修正循环、危险 SQL 审批、执行失败重试、结果总结，普通 chain 会变得很绕。</div>
+
+      <h3>2.7 RAG Agent 怎么拆节点</h3>
+      <div class="flow">question
+  → classify：判断是否需要检索
+  → rewrite_query：改写检索 query
+  → retrieve_vector / retrieve_keyword：向量 + 关键词检索
+  → rerank：重排
+  → grade_docs：判断资料是否足够
+  → if not enough → rewrite_query
+  → generate_answer
+  → verify_citations / answer_check</div>
+
+      <h2>3. DeepAgents：LangGraph 之上的工程化封装</h2>
+      <p class="lead">DeepAgents 不是替代 LangGraph，而是把复杂 Agent 常用能力打包：计划、文件系统、子 Agent、记忆、权限、人类审批、上下文管理。</p>
+      <h3>3.1 最小 DeepAgent</h3>
+      <pre><button class="copy">复制</button><code class="language-ts">import { createDeepAgent } from "deepagents";
+import { tool } from "langchain";
+import * as z from "zod";
+
+const searchDocs = tool(async ({ query }) => {
+  return "检索结果：LangGraph 适合状态化多步骤 Agent。";
+}, {
+  name: "search_docs",
+  description: "搜索内部 Agent 教程文档",
+  schema: z.object({ query: z.string() }),
+});
+
+const agent = createDeepAgent({
+  tools: [searchDocs],
+  systemPrompt: "你是一个 Agent 学习助手，回答要结构化。",
+});
+
+const result = await agent.invoke({
+  messages: [{ role: "user", content: "帮我复习 LangGraph" }],
+});</code></pre>
+
+      <h3>3.2 DeepAgents 解决什么工程问题</h3>
+      <div class="grid">
+        <div class="card"><h3>Planning / Todo</h3><p>把复杂任务拆成步骤，记录进度，避免 Agent 乱跑。</p></div>
+        <div class="card"><h3>Filesystem</h3><p>把大上下文、工具结果、草稿写入虚拟文件系统，减少 token 压力。</p></div>
+        <div class="card"><h3>Subagents</h3><p>把搜索、分析、编码、审稿等子任务交给不同 Agent，隔离上下文。</p></div>
+        <div class="card"><h3>Memory</h3><p>跨线程/跨会话保存长期偏好、事实、项目知识。</p></div>
+        <div class="card"><h3>Permissions</h3><p>限制文件读写、shell 执行、敏感工具调用。</p></div>
+        <div class="card"><h3>Human-in-the-loop</h3><p>关键动作前中断，让人确认后继续。</p></div>
+      </div>
+
+      <h3>3.3 面试讲法</h3>
+      <div class="note">DeepAgents 解决的是“把 LangGraph/Agent Loop 做成可用于真实长任务的工程套件”。它把规划、上下文压缩、文件系统、子 Agent、记忆、权限和流式事件这些能力预置好，适合做类似代码助手、研究助手、运维助手的复杂 Agent。</div>
+
+      <h2>4. 中间件：作用、接入方式、怎么讲</h2>
+      <p>这里的“中间件”分两类：一类是 LangChain/DeepAgents 执行链路里的 middleware hooks；另一类是 Agent 应用接入的基础设施中间件。</p>
+
+      <h3>4.1 LangChain Middleware：拦截 Agent 执行过程</h3>
+      <p>Middleware 用来控制 agent loop 的每一步：模型调用前后、工具调用前后、Agent 开始和结束。</p>
+      <pre><button class="copy">复制</button><code class="language-ts">import { createAgent, summarizationMiddleware, humanInTheLoopMiddleware } from "langchain";
+
+const agent = createAgent({
+  model: "gpt-5.5",
+  tools: [searchDocs, sendEmail],
+  middleware: [
+    summarizationMiddleware({
+      model: "gpt-5.4-mini",
+      trigger: { tokens: 4000 },
+      keep: { messages: 20 },
+    }),
+    humanInTheLoopMiddleware({
+      interruptOn: { send_email: true },
+    }),
+  ],
+});</code></pre>
+      <div class="table"><table><thead><tr><th>Hook</th><th>什么时候运行</th><th>典型用途</th></tr></thead><tbody>
+        <tr><td><code>beforeAgent</code></td><td>Agent 开始时一次</td><td>初始化上下文、鉴权、加载用户偏好</td></tr>
+        <tr><td><code>beforeModel</code></td><td>每次模型调用前</td><td>动态 prompt、裁剪消息、注入 RAG 资料</td></tr>
+        <tr><td><code>afterModel</code></td><td>每次模型响应后</td><td>记录日志、检查输出、统计 token</td></tr>
+        <tr><td><code>afterAgent</code></td><td>Agent 结束时一次</td><td>保存结果、写记忆、埋点</td></tr>
+        <tr><td><code>wrapModelCall</code></td><td>包裹模型调用</td><td>重试、fallback、缓存、动态换模型</td></tr>
+        <tr><td><code>wrapToolCall</code></td><td>包裹工具调用</td><td>工具重试、限流、权限、错误兜底</td></tr>
+      </tbody></table></div>
+
+      <h3>4.2 自定义 Middleware 示例</h3>
+      <pre><button class="copy">复制</button><code class="language-ts">import { createMiddleware, AIMessage } from "langchain";
+
+const messageLimitMiddleware = createMiddleware({
+  name: "MessageLimitMiddleware",
+  beforeModel: {
+    canJumpTo: ["end"],
+    hook: (state) => {
+      if (state.messages.length > 50) {
+        return {
+          messages: [new AIMessage("对话太长，请开启新话题。")],
+          jumpTo: "end",
+        };
+      }
+    },
+  },
+  afterModel: (state) => {
+    console.log("model returned", state.messages.at(-1)?.content);
+  },
+});</code></pre>
+
+      <h3>4.3 预置 Middleware 作用表</h3>
+      <div class="table"><table><thead><tr><th>Middleware</th><th>作用</th><th>接入时机</th><th>面试表达</th></tr></thead><tbody>
+        <tr><td>Summarization</td><td>接近 token 上限时总结旧历史</td><td>长对话、长任务</td><td>解决上下文爆炸，不等于长期记忆</td></tr>
+        <tr><td>Human-in-the-loop</td><td>敏感工具调用前暂停审批</td><td>发邮件、删文件、执行 SQL、付款</td><td>把不可逆动作交给人确认</td></tr>
+        <tr><td>Model call limit</td><td>限制模型调用次数</td><td>防止死循环和成本失控</td><td>Agent 必须有 max steps / budget</td></tr>
+        <tr><td>Tool call limit</td><td>限制工具调用次数</td><td>工具可能循环调用时</td><td>防止模型反复查同一个工具</td></tr>
+        <tr><td>Model fallback</td><td>主模型失败时切备用模型</td><td>高可用场景</td><td>生产环境不能只依赖单一模型</td></tr>
+        <tr><td>PII detection</td><td>检测/脱敏个人敏感信息</td><td>客服、HR、医疗、金融</td><td>安全合规护栏</td></tr>
+        <tr><td>To-do list</td><td>给 Agent 任务规划和进度跟踪</td><td>复杂多步骤任务</td><td>让 Agent 先计划再执行</td></tr>
+        <tr><td>LLM tool selector</td><td>先筛选相关工具再给主模型</td><td>工具很多时</td><td>降低工具选择噪声和 token</td></tr>
+        <tr><td>Tool retry / Model retry</td><td>失败后指数退避重试</td><td>网络/第三方服务不稳定</td><td>错误恢复能力</td></tr>
+        <tr><td>Context editing</td><td>裁剪、清理、调整上下文</td><td>工具输出过大、历史污染</td><td>上下文工程的一部分</td></tr>
+        <tr><td>Filesystem</td><td>给 Agent 文件系统存上下文/结果</td><td>代码助手、研究助手</td><td>大结果不要全塞 messages</td></tr>
+        <tr><td>Subagent</td><td>允许派生子 Agent</td><td>研究、编码、审查并行</td><td>隔离上下文，专业分工</td></tr>
+      </tbody></table></div>
+
+      <h3>4.4 基础设施中间件：作用和接入方式</h3>
+      <div class="table"><table><thead><tr><th>组件</th><th>作用</th><th>怎么接入</th><th>在 Agent 里的位置</th></tr></thead><tbody>
+        <tr><td>Milvus / 向量库</td><td>语义检索，按 embedding 相似度找资料</td><td>Docker 启动服务，LangChain vectorstore 写入/检索</td><td>RAG retriever</td></tr>
+        <tr><td>Elasticsearch</td><td>全文检索、关键词、过滤、IK 中文分词</td><td>Docker Compose + ES Client，建 index/mapping</td><td>Hybrid RAG 的 keyword search</td></tr>
+        <tr><td>MySQL / PostgreSQL</td><td>业务数据、会话、消息、元数据</td><td>ORM/SQL Client，表结构设计和索引</td><td>Tool 或 memory store</td></tr>
+        <tr><td>Redis</td><td>短期状态、缓存、TTL、任务进度</td><td>Docker + redis client</td><td>session cache / job state</td></tr>
+        <tr><td>Neo4j</td><td>实体关系和图谱检索</td><td>Docker + Neo4j Driver，写节点/边</td><td>GraphRAG</td></tr>
+        <tr><td>Mem0</td><td>长期用户记忆服务</td><td>MemoryClient add/search</td><td>long-term memory</td></tr>
+        <tr><td>MCP Server</td><td>标准化外部工具接入</td><td>stdio/http 配置 MCP client</td><td>Tool provider</td></tr>
+        <tr><td>LangSmith</td><td>trace、调试、评估、观测</td><td>配置 LANGSMITH_TRACING/API KEY</td><td>全链路 observability</td></tr>
+        <tr><td>SSE / AGUI</td><td>把 Agent 文本、工具调用、状态流给前端</td><td>HTTP event-stream 或 AI SDK stream protocol</td><td>UI streaming layer</td></tr>
+      </tbody></table></div>
+
+      <h2>5. 三个高频面试问题怎么回答</h2>
+      <h3>5.1 怎么把模型调用、结构化输出、工具调用、检索组合成一个链？</h3>
+      <div class="note">我会把链路拆成四层：先用 structured output 做意图抽取，再用 retriever 检索业务上下文，然后用 prompt + model 生成 SQL 或工具调用，最后执行 tool 并用 parser 格式化结果。如果流程是线性的，用 LCEL；如果涉及失败重试、审批、循环修正，就用 LangGraph。</div>
+
+      <h3>5.2 为什么不用普通 chain，而要用状态图？</h3>
+      <div class="note">普通 chain 适合固定流水线，但真实 Agent 经常要根据中间结果决定下一步，比如 SQL 执行失败要修正，资料不足要重新检索，危险操作要人工确认。LangGraph 用 State 保存过程数据，用 Node 拆步骤，用 Conditional Edge 路由，用 Checkpoint 恢复流程，所以更适合长任务和可控 Agent。</div>
+
+      <h3>5.3 DeepAgents 解决什么问题？</h3>
+      <div class="note">DeepAgents 是 LangGraph 之上的 agent harness。它不是只提供一个图，而是内置 planning、todo、文件系统、子 Agent、长期记忆、权限、人类审批和上下文压缩。适合把 Agent 从 demo 做成能处理复杂项目的工程化系统。</div>
+
+      <h2>6. 你的项目可以怎么包装</h2>
+      <p>你简历里的 BI 智能问数 agent 很适合包装成一个完整例子：</p>
+      <div class="flow">React 聊天界面
+  → SSE 展示 Agent 步骤
+  → FastAPI/Nest API
+  → LangGraph 编排：抽意图 / 检索元数据 / 生成 SQL / 校验 SQL / 执行 / 总结
+  → LangChain 组件：PromptTemplate / Model / Tool / OutputParser / Retriever
+  → MySQL + Qdrant/Milvus + Elasticsearch
+  → LangSmith 日志与 trace
+  → Redis/PostgreSQL 保存会话和状态</div>
+      <h3>2 分钟项目讲法</h3>
+      <p>“这个项目是一个 BI 自然语言问数助手。用户用中文提问，系统先做意图抽取，再检索表结构、字段别名、指标口径和字段取值，然后生成 SQL，执行前做校验和修正，最后查询数据库并通过 SSE 把执行步骤和结果流式返回给前端。LangChain 负责 prompt、模型、结构化输出、工具和 RAG 组件；LangGraph 负责编排多节点流程和错误修正；如果要进一步工程化，可以用 DeepAgents 的 todo、文件系统、子 Agent、权限和长期记忆能力增强长任务可靠性。”</p>
+
+      <h2>7. 最小复习清单</h2>
+      <ol>
+        <li>能手写 PromptTemplate + model + parser 的线性 LCEL 示例。</li>
+        <li>能解释 tool calling 的消息流：AIMessage(tool_calls) -> ToolMessage -> AIMessage。</li>
+        <li>能画出 RAG：loader -> splitter -> embedding -> vectorstore -> retriever -> prompt。</li>
+        <li>能用 StateGraph 拆一个 SQL Agent 或 RAG Agent。</li>
+        <li>能说清 checkpoint 和 memory 的区别。</li>
+        <li>能说明 interrupt / HITL 用在什么敏感场景。</li>
+        <li>能解释 DeepAgents 的 planning、filesystem、subagents、memory、permissions。</li>
+        <li>能说出常见 middleware 的作用：summary、HITL、retry、fallback、PII、tool selector、filesystem、subagent。</li>
+      </ol>
+
+      <h2>8. 参考来源</h2>
+      <p class="sources">本页 API 和概念对齐了 LangChain 官方文档：<a href="https://docs.langchain.com/oss/javascript/langchain/overview">LangChain overview</a>、<a href="https://docs.langchain.com/oss/javascript/langgraph/overview">LangGraph overview</a>、<a href="https://docs.langchain.com/oss/javascript/langgraph/quickstart">LangGraph quickstart</a>、<a href="https://docs.langchain.com/oss/javascript/deepagents/overview">Deep Agents overview</a>、<a href="https://docs.langchain.com/oss/javascript/langchain/middleware/overview">Middleware overview</a>、<a href="https://docs.langchain.com/oss/javascript/langchain/middleware/built-in">Prebuilt middleware</a>、<a href="https://docs.langchain.com/oss/javascript/langchain/middleware/custom">Custom middleware</a>。</p>
+    </article>
+  </main>
+</div>
+<button class="backtop" onclick="scrollTo({top:0,behavior:'smooth'})">回到顶部</button>
+<script>
+const toc = document.getElementById('toc');
+const doc = document.getElementById('doc');
+const headings = [...doc.querySelectorAll('h2,h3')];
+const used = new Set();
+const slug = (text) => {
+  let base = text.trim().replace(/\s+/g, '-').replace(/[^\w\u4e00-\u9fff-]/g, '').toLowerCase() || 'section';
+  let s = base, i = 2;
+  while (used.has(s)) s = `${base}-${i++}`;
+  used.add(s);
+  return s;
+};
+headings.forEach(h => {
+  h.id = slug(h.textContent);
+  const a = document.createElement('a');
+  a.href = '#' + h.id;
+  a.textContent = h.textContent;
+  a.className = h.tagName === 'H2' ? 'h2' : 'h3';
+  if (h.tagName === 'H3') a.style.paddingLeft = '22px';
+  toc.appendChild(a);
+});
+const links = [...toc.querySelectorAll('a')];
+const obs = new IntersectionObserver(entries => {
+  const visible = entries.filter(e => e.isIntersecting).sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top)[0];
+  if (!visible) return;
+  links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + visible.target.id));
+}, { rootMargin:'-20% 0px -72% 0px' });
+headings.forEach(h => obs.observe(h));
+
+document.querySelectorAll('pre').forEach(pre => {
+  const btn = pre.querySelector('.copy');
+  btn.addEventListener('click', async () => {
+    const text = pre.querySelector('code').innerText;
+    try { await navigator.clipboard.writeText(text); btn.textContent = '已复制'; }
+    catch { btn.textContent = '复制失败'; }
+    setTimeout(() => btn.textContent = '复制', 1200);
+  });
+});
+const original = doc.innerHTML;
+function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function searchDoc(q){
+  doc.innerHTML = original;
+  if (!q) return;
+  const re = new RegExp(escapeRegExp(q), 'gi');
+  const walker = document.createTreeWalker(doc, NodeFilter.SHOW_TEXT, { acceptNode(node){
+    if (!node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+    if (node.parentElement.closest('script,style,pre,code')) return NodeFilter.FILTER_REJECT;
+    return re.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+  }});
+  const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(n => { const span=document.createElement('span'); span.innerHTML=escapeHtml(n.nodeValue).replace(re, m=>`<mark>${escapeHtml(m)}</mark>`); n.parentNode.replaceChild(span,n); });
+  const first = doc.querySelector('mark'); if(first) first.scrollIntoView({behavior:'smooth',block:'center'});
+}
+const input = document.getElementById('search');
+input.addEventListener('input', e => searchDoc(e.target.value.trim()));
+document.getElementById('clearSearch').addEventListener('click', () => { input.value=''; doc.innerHTML=original; input.focus(); });
+</script>
+</body>
+</html>
