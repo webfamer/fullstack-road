@@ -6,8 +6,8 @@ const githubPagesBase =
   process.env.GITHUB_ACTIONS && repoName && !isUserOrOrgPage ? `/${repoName}/` : '/'
 
 export default defineConfig({
-  title: 'Python 全栈后端入门',
-  description: '写给前端工程师的 FastAPI + MySQL 实战教程',
+  title: '全栈知识站',
+  description: 'Python · Node.js · NestJS — 写给前端工程师的全栈学习路径',
   lang: 'zh-CN',
   base: process.env.VITEPRESS_BASE ?? githubPagesBase,
   cleanUrls: true,
@@ -15,42 +15,102 @@ export default defineConfig({
   ignoreDeadLinks: true,
   themeConfig: {
     logo: '/logo.svg',
-    siteTitle: 'Python 全栈后端入门',
+    siteTitle: '全栈知识站',
     nav: [
-      { text: '学习路线', link: '/guide/learning-path' },
-      { text: 'MySQL', link: '/guide/mysql-table-design' },
-      { text: 'FastAPI', link: '/guide/fastapi-basics' },
-      { text: '练习', link: '/guide/exercises' }
+      { text: '首页', link: '/' },
+      {
+        text: 'Python',
+        items: [
+          { text: '语法入门', link: '/guide/python-intro' },
+          { text: '深入理解类', link: '/guide/python-class' },
+        ]
+      },
+      {
+        text: 'FastAPI',
+        items: [
+          { text: 'FastAPI 基础', link: '/guide/fastapi-basics' },
+          { text: 'FastAPI 进阶', link: '/guide/fastapi-advanced' },
+        ]
+      },
+      {
+        text: 'Node.js',
+        items: [
+          { text: '运行时原理', link: '/guide/node-runtime' },
+          { text: '模块系统', link: '/guide/node-module-system' },
+          { text: '异步与错误处理', link: '/guide/node-async' },
+        ]
+      },
+      {
+        text: 'NestJS',
+        items: [
+          { text: '简介与架构', link: '/guide/nestjs-intro' },
+          { text: '依赖注入', link: '/guide/nestjs-di' },
+        ]
+      },
     ],
     sidebar: [
       {
-        text: '开始之前',
+        text: '🐍 Python 语法',
+        collapsed: false,
         items: [
-          { text: '这套教程怎么学', link: '/guide/learning-path' },
-          { text: '后端思维补齐', link: '/guide/backend-thinking' }
+          { text: 'Python 快速入门', link: '/guide/python-intro' },
+          { text: '深入理解类', link: '/guide/python-class' },
         ]
       },
       {
-        text: 'MySQL 与建模',
+        text: '⚡ FastAPI 开发',
+        collapsed: false,
+        items: [
+          { text: '学习路线', link: '/guide/learning-path' },
+          { text: '后端思维补齐', link: '/guide/backend-thinking' },
+          { text: 'FastAPI 基础', link: '/guide/fastapi-basics' },
+          { text: 'FastAPI + MySQL 项目结构', link: '/guide/fastapi-mysql-project' },
+          { text: 'FastAPI 进阶', link: '/guide/fastapi-advanced' },
+        ]
+      },
+      {
+        text: '🗄️ MySQL 与建模',
+        collapsed: false,
         items: [
           { text: '表结构设计', link: '/guide/mysql-table-design' },
-          { text: 'SQL 基础与查询', link: '/guide/sql-basics' }
+          { text: 'SQL 基础与查询', link: '/guide/sql-basics' },
         ]
       },
       {
-        text: 'FastAPI 开发',
-        items: [
-          { text: 'FastAPI 基础', link: '/guide/fastapi-basics' },
-          { text: 'FastAPI + MySQL 项目结构', link: '/guide/fastapi-mysql-project' }
-        ]
-      },
-      {
-        text: '真实后端问题',
+        text: '🔐 并发与事务',
+        collapsed: false,
         items: [
           { text: '并发、事务与一致性', link: '/guide/concurrency-transaction' },
-          { text: '综合练习', link: '/guide/exercises' }
+          { text: '综合练习', link: '/guide/exercises' },
         ]
-      }
+      },
+      {
+        text: '🟢 Node.js',
+        collapsed: false,
+        items: [
+          { text: '运行时与底层模型', link: '/guide/node-runtime' },
+          { text: '模块系统（CJS/ESM）', link: '/guide/node-module-system' },
+          { text: '异步编程与错误处理', link: '/guide/node-async' },
+          { text: 'EventEmitter · Buffer · Stream', link: '/guide/node-stream' },
+          { text: 'HTTP 与 BFF', link: '/guide/node-http' },
+          { text: '性能与稳定性', link: '/guide/node-perf' },
+          { text: '综合场景与实战练习', link: '/guide/node-practice' },
+        ]
+      },
+      {
+        text: '🏗️ NestJS',
+        collapsed: false,
+        items: [
+          { text: '简介与架构概览', link: '/guide/nestjs-intro' },
+          { text: '装饰器体系', link: '/guide/nestjs-decorators' },
+          { text: '依赖注入', link: '/guide/nestjs-di' },
+          { text: '请求管道', link: '/guide/nestjs-pipeline' },
+          { text: '认证与授权', link: '/guide/nestjs-auth' },
+          { text: 'DTO 与 Swagger', link: '/guide/nestjs-dto' },
+          { text: '数据库操作', link: '/guide/nestjs-database' },
+          { text: '进阶特性', link: '/guide/nestjs-advanced' },
+        ]
+      },
     ],
     socialLinks: [
       { icon: 'github', link: 'https://github.com/' }
