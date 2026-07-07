@@ -441,3 +441,163 @@ async def override_get_current_user():
 
 app.dependency_overrides[get_current_user] = override_get_current_user
 ```
+
+**完整测试示例：**
+
+```python
+import pytest
+from httpx import AsyncClient, ASGITransport
+
+# conftest.py
+@pytest.fixture
+def app():
+    from app.main import app
+    return app
+
+@pytest.fixture
+async def client(app):
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
+
+@pytest.mark.asyncio
+async def test_full_flow(app, client):
+    # 1. 注册
+    resp = await client.post("/api/v1/auth/register", json={
+        "email": "test@example.com",
+        "password": "Test123456"
+    })
+    assert resp.status_code == 201
+
+    # 2. 登录获取 token
+    resp = await client.post("/api/v1/auth/login", json={
+        "email": "test@example.com",
+        "password": "Test123456"
+    })
+    assert resp.status_code == 200
+    token = resp.json()["access_token"]
+
+    # 3. 用 token 访问受保护接口
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = await client.get("/api/v1/users/me", headers=headers)
+    assert resp.status_code == 200
+    assert resp.json()["email"] == "test@example.com"
+```
+
+**测试原则总结：**
+
+```txt
+单元测试：测试 repository 和 service，Mock 数据库
+集成测试：测试 controller → service → repository 链路
+E2E 测试：启动真实数据库，测试完整请求-响应
+API 测试：Mock 鉴权，验证状态码和响应结构
+并发测试：测试幂等和锁的场景
+```
+
+---
+
+## FastAPI 中间件
+
+```python
+from fastapi import FastAPI, Request
+from starlette.middleware.base import BaseHTTPMiddleware
+import time
+
+app = FastAPI()
+
+# 内置中间件
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://app.example.com"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["api.example.com", "localhost"]
+)
+```
+
+**自定义中间件：**
+
+```python
+class TimingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        start = time.time()
+        response = await call_next(request)
+        process_time = time.time() - start
+        response.headers["X-Process-Time"] = str(process_time)
+        return response
+
+app.add_middleware(TimingMiddleware)
+```
+
+---
+
+## FastAPI + WebSocket
+
+```python
+from fastapi import WebSocket, WebSocketDisconnect
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+manager = ConnectionManager()
+
+@app.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: str):
+    await manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await manager.broadcast(f"{client_id}: {data}")
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+```
+
+---
+
+## 配置与项目组织
+
+```python
+# core/config.py
+from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    app_name: str = "AI Platform API"
+    database_url: str
+    redis_url: str = "redis://localhost:6379/0"
+    secret_key: str
+    debug: bool = False
+    allowed_origins: list[str] = ["http://localhost:3000"]
+
+    class Config:
+        env_file = ".env"
+
+settings = Settings()
+```
+
+---
+
+## 面试怎么说
+
+> FastAPI 项目里我会按 router → schema → service → repository → model 分层。用 Pydantic 拆分请求/响应模型，Depends 注入鉴权和 DB Session。耗时任务不进请求线程，用 MQ 或任务表异步处理。测试用 pytest + httpx.AsyncClient，覆盖单元、集成和 E2E。线上用 uvicorn + gunicorn，Docker 容器化部署。

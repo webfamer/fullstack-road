@@ -47,6 +47,14 @@ export default defineConfig({
           { text: '依赖注入', link: '/guide/nestjs-di' },
         ]
       },
+      {
+        text: '运维',
+        items: [
+          { text: 'Docker 与部署', link: '/guide/docker-deployment' },
+          { text: 'Redis 深入', link: '/guide/redis-deep' },
+          { text: '消息队列', link: '/guide/message-queue' },
+        ]
+      },
     ],
     sidebar: [
       {
@@ -109,6 +117,21 @@ export default defineConfig({
           { text: 'DTO 与 Swagger', link: '/guide/nestjs-dto' },
           { text: '数据库操作', link: '/guide/nestjs-database' },
           { text: '进阶特性', link: '/guide/nestjs-advanced' },
+        ]
+      },
+      {
+        text: '🐳 Docker 与部署',
+        collapsed: false,
+        items: [
+          { text: 'Docker 与部署', link: '/guide/docker-deployment' },
+        ]
+      },
+      {
+        text: '📦 基础设施',
+        collapsed: false,
+        items: [
+          { text: 'Redis 深入', link: '/guide/redis-deep' },
+          { text: '消息队列', link: '/guide/message-queue' },
         ]
       },
     ],

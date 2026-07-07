@@ -32,6 +32,12 @@ features:
   - icon: 🗄️
     title: MySQL 与并发一致性
     details: 表结构设计、SQL 查询优化、事务隔离级别、分布式锁，从业务场景出发，不只是背概念。
+  - icon: 🐳
+    title: Docker 与部署
+    details: Dockerfile、docker-compose、nginx 反向代理、PM2 进程管理、GitHub Actions CI/CD 完整部署工作流。
+  - icon: 📦
+    title: Redis · MQ · 基础设施
+    details: Redis 五种数据结构和缓存策略，消息队列选型与实战，幂等消费设计，前后端衔接的完整方案。
 ---
 
 ## 学习路径
@@ -64,13 +70,22 @@ NestJS 简介与架构 → 装饰器体系 → 依赖注入
   → 数据库操作（TypeORM）→ 进阶特性
 ```
 
+### 🐳 部署与基础设施（所有方向通用）
+
+```
+Docker 与部署 → Redis 深入 → 消息队列
+  → 综合练习串联 → 完整项目实战
+```
+
 ## 各章内容速览
 
 | 模块 | 章节数 | 核心内容 |
 |---|---|---|
-| **Python 语法** | 2 章 | 基础语法、类与 OOP |
-| **FastAPI** | 4 章 | 基础 → 项目结构 → 进阶 → 实战 |
+| **Python 语法** | 2 章 | 基础语法、类与 OOP、asyncio、类型标注 |
+| **FastAPI** | 4 章 | 基础 → 项目结构 → 进阶（测试/中间件/WebSocket） |
 | **MySQL** | 2 章 | 建模 + SQL 查询 |
 | **并发事务** | 2 章 | 事务原理 + 综合练习 |
 | **Node.js** | 7 章 | 运行时 / 模块 / 异步 / Stream / HTTP / 性能 / 实战 |
 | **NestJS** | 8 章 | 介绍 / 装饰器 / DI / 管道 / 鉴权 / DTO / 数据库 / 进阶 |
+| **Docker 与部署** | 1 章 | 容器化 / docker-compose / nginx / PM2 / CI/CD |
+| **基础设施** | 2 章 | Redis 深入 / 消息队列 |

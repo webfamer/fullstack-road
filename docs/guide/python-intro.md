@@ -374,6 +374,147 @@ l.log("started")
 
 ---
 
+## 异步编程（asyncio）
+
+Python 的 asyncio 和 JavaScript 的 async/await 非常相似：
+
+```python
+import asyncio
+
+# async def 定义一个异步函数（类似 JS 的 async function）
+async def fetch_data(url: str) -> dict:
+    print(f"开始请求: {url}")
+    await asyncio.sleep(1)  # 模拟网络请求（类似 JS 的 await）
+    return {"url": url, "status": 200}
+
+# 并发执行多个异步任务
+async def main():
+    # 串行执行（不好）
+    # r1 = await fetch_data("/api/users")
+    # r2 = await fetch_data("/api/orders")
+
+    # 并发执行（好）
+    r1, r2 = await asyncio.gather(
+        fetch_data("/api/users"),
+        fetch_data("/api/orders"),
+    )
+    print(r1, r2)
+
+asyncio.run(main())
+```
+
+**和 JS 的对应关系：**
+
+| JavaScript | Python |
+|---|---|
+| `async function` | `async def` |
+| `await promise` | `await coroutine` |
+| `Promise.all([...])` | `asyncio.gather(...)` |
+| `Promise.race([...])` | `asyncio.wait(..., return_when=FIRST_COMPLETED)` |
+| `new Promise((resolve) => ...)` | `asyncio.get_event_loop().run_in_executor(...)` |
+
+**在 FastAPI 中的对比：**
+
+```python
+# ✅ 正确的异步用法（I/O 密集任务）
+@app.get("/async")
+async def read_async():
+    data = await fetch_from_database()
+    return data
+
+# ✅ 同步函数 FastAPI 自动放线程池，不阻塞事件循环
+@app.get("/sync")
+def read_sync():
+    data = fetch_from_database_sync()
+    return data
+```
+
+---
+
+## 虚拟环境
+
+前端用 `npm install` / `yarn`，Python 用 `pip` + 虚拟环境：
+
+```bash
+# 创建虚拟环境
+python3 -m venv .venv
+
+# 激活
+source .venv/bin/activate       # Mac/Linux
+.venv\Scripts\activate          # Windows
+
+# 安装依赖
+pip install fastapi uvicorn
+
+# 保存依赖
+pip freeze > requirements.txt
+
+# 另一个开发者
+pip install -r requirements.txt
+
+# 退出虚拟环境
+deactivate
+```
+
+**poetry（更现代的依赖管理，类似 package.json）：**
+
+```bash
+pip install poetry
+poetry init           # 创建 pyproject.toml
+poetry add fastapi    # 安装依赖
+poetry install        # 根据 pyproject.toml 安装
+poetry shell          # 进入虚拟环境
+```
+
+### .gitignore 中要忽略的
+
+```txt
+.venv/
+__pycache__/
+*.pyc
+.env
+*.egg-info/
+dist/
+build/
+```
+
+---
+
+## 类型标注（Type Hints）
+
+Python 3.10+ 原生支持类型标注，是 FastAPI 和 Pydantic 的基础：
+
+```python
+# 基础类型
+name: str = "Alice"
+age: int = 28
+is_admin: bool = False
+scores: list[int] = [95, 87, 92]
+user_data: dict[str, object] = {"name": "Alice", "age": 28}
+
+# 可以为 None
+address: str | None = None
+# 或 Optional[str]
+
+# 函数签名
+def fetch_users(limit: int = 10, include_disabled: bool = False) -> list[dict]:
+    ...
+
+# 联合类型（多个可能类型）
+def parse_id(id: str | int) -> dict:
+    ...
+
+# Literal（限制取值）
+from typing import Literal
+
+def set_status(status: Literal["pending", "running", "done"]) -> None:
+    ...
+```
+
+**记住：Python 的类型标注在运行时不影响代码行为（不像 TypeScript 会编译检查）——它主要用于代码提示和第三方工具（如 FastAPI、Pydantic、mypy）。**
+
+---
+
 ## 文件操作
 
 | 模式 | 说明 |

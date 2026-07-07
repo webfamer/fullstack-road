@@ -431,3 +431,259 @@ describe('UsersController (e2e)', () => {
 })
 export class LoggerModule {}
 ```
+
+---
+
+## 文件上传
+
+NestJS 通过 `FileInterceptor` 处理文件上传：
+
+```bash
+npm install @types/multer
+```
+
+```typescript
+import {
+  Controller, Post, UseInterceptors, UploadedFile,
+  UploadedFiles, BadRequestException,
+} from '@nestjs/common'
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express'
+import { diskStorage } from 'multer'
+import { extname } from 'path'
+
+@Controller('upload')
+export class UploadController {
+  // 单文件上传
+  @Post('file')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const name = Date.now() + extname(file.originalname)
+          cb(null, name)
+        },
+      }),
+      limits: { fileSize: 10 * 1024 * 1024 },  // 10MB
+      fileFilter: (req, file, cb) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|pdf)$/)) {
+          cb(new BadRequestException('不支持的文件类型'), false)
+        }
+        cb(null, true)
+      },
+    }),
+  )
+  uploadFile(@UploadedFile() file: Express.Multer.File) {
+    return { filename: file.filename, path: file.path, size: file.size }
+  }
+
+  // 多文件上传
+  @Post('files')
+  @UseInterceptors(FilesInterceptor('files', 5))  // 最多 5 个
+  uploadFiles(@UploadedFiles() files: Express.Multer.File[]) {
+    return files.map(f => ({ filename: f.filename, size: f.size }))
+  }
+}
+```
+
+---
+
+## WebSocket Gateway
+
+```bash
+npm install @nestjs/websockets @nestjs/platform-socket.io
+```
+
+```typescript
+import {
+  WebSocketGateway, WebSocketServer, SubscribeMessage,
+  OnGatewayConnection, OnGatewayDisconnect,
+} from '@nestjs/websockets'
+import { Server, Socket } from 'socket.io'
+
+@WebSocketGateway({
+  cors: { origin: '*' },
+  namespace: '/chat',
+})
+export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  @WebSocketServer()
+  server: Server
+
+  handleConnection(client: Socket) {
+    console.log(`客户端连接: ${client.id}`)
+  }
+
+  handleDisconnect(client: Socket) {
+    console.log(`客户端断开: ${client.id}`)
+  }
+
+  @SubscribeMessage('message')
+  handleMessage(client: Socket, payload: { room: string; text: string }) {
+    this.server.to(payload.room).emit('message', {
+      from: client.id,
+      text: payload.text,
+    })
+  }
+
+  @SubscribeMessage('join')
+  handleJoin(client: Socket, room: string) {
+    client.join(room)
+  }
+}
+```
+
+**前端连接：**
+
+```typescript
+import { io } from 'socket.io-client'
+
+const socket = io('http://localhost:3000/chat')
+socket.emit('join', 'room-1')
+socket.emit('message', { room: 'room-1', text: 'Hello' })
+socket.on('message', (data) => console.log(data))
+```
+
+---
+
+## 循环依赖
+
+当两个服务互相依赖时：
+
+```typescript
+// ❌ 直接互相 import 会报错
+@Injectable()
+export class CatsService {
+  constructor(private commonService: CommonService) {}  // Error!
+}
+```
+
+```typescript
+// ✅ 用 forwardRef 解决
+import { forwardRef, Inject } from '@nestjs/common'
+
+@Injectable()
+export class CatsService {
+  constructor(
+    @Inject(forwardRef(() => CommonService))
+    private commonService: CommonService,
+  ) {}
+}
+
+// 另一侧也要加
+@Injectable()
+export class CommonService {
+  constructor(
+    @Inject(forwardRef(() => CatsService))
+    private catsService: CatsService,
+  ) {}
+}
+```
+
+---
+
+## 软删除（TypeORM）
+
+```typescript
+import { Entity, Column, DeleteDateColumn } from 'typeorm'
+
+@Entity()
+export class User {
+  @Column()
+  name: string
+
+  @DeleteDateColumn()
+  deletedAt?: Date  // 被删除时自动设置为当前时间
+}
+
+// Service
+@Injectable()
+export class UsersService {
+  constructor(
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
+  ) {}
+
+  // 软删除
+  async softRemove(id: number) {
+    await this.userRepo.softDelete(id)
+  }
+
+  // 恢复
+  async restore(id: number) {
+    await this.userRepo.restore(id)
+  }
+
+  // 普通查询不包含软删除的
+  async findAll(): Promise<User[]> {
+    return this.userRepo.find()  // 自动过滤 deletedAt IS NULL
+  }
+
+  // 包含已删除的
+  async findAllWithDeleted(): Promise<User[]> {
+    return this.userRepo.find({ withDeleted: true })
+  }
+}
+```
+
+**为什么用软删除：**
+- 数据可恢复
+- 保留审计跟踪
+- 不破坏外键关系
+
+---
+
+## 微服务基础（TCP 传输）
+
+```bash
+npm install @nestjs/microservices
+```
+
+```typescript
+// main.ts — 混合 HTTP + TCP 微服务
+import { NestFactory } from '@nestjs/core'
+import { Transport, MicroserviceOptions } from '@nestjs/microservices'
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule)
+
+  // 微服务（TCP）
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.TCP,
+    options: { port: 3001 },
+  })
+
+  await app.startAllMicroservices()
+  await app.listen(3000)
+}
+
+// document.controller.ts — 微服务控制器
+import { Controller } from '@nestjs/common'
+import { MessagePattern } from '@nestjs/microservices'
+
+@Controller()
+export class DocumentController {
+  @MessagePattern({ cmd: 'parse_document' })
+  async parseDocument(data: { documentId: number }) {
+    // 在微服务中解析文档
+    return { status: 'parsed' }
+  }
+}
+
+// 客户端调用
+@Injectable()
+export class AppService {
+  constructor(
+    @Inject('DOCUMENT_SERVICE') private client: ClientProxy,
+  ) {}
+
+  async parseDoc(id: number) {
+    return this.client.send({ cmd: 'parse_document' }, { documentId: id }).toPromise()
+  }
+}
+```
+
+---
+
+## 面试怎么说
+
+> NestJS 的进阶能力包括缓存管理（@nestjs/cache-manager + Redis）、任务调度（@nestjs/schedule）、SSE 实时推送、文件上传、WebSocket Gateway、API 版本控制、循环依赖处理、软删除和微服务。生产环境会用 Helmet 安全头、Throttler 限流、ConfigModule 管理环境变量，再用 Jest + @nestjs/testing 覆盖单元和 E2E 测试。
